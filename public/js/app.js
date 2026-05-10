@@ -45,15 +45,33 @@ function chapterModule(chId) {
   return ch ? window[ch.module] : null;
 }
 
+// ---- Chapter badge map ----
+var CHAPTER_BADGES = {
+  ch1:  '🏷️',
+  ch2:  '🔧',
+  ch5:  '⚗️',
+  ch6:  '📈',
+  ch7:  '⚖️',
+  ch8:  '📋',
+  ch9:  '🔍',
+  ch10: '💰',
+  ch11: '🎯',
+  ch12: '🏗️'
+};
+
 // ---- Dashboard ----
 function renderDashboard() {
   showView('view-dashboard');
   setActiveNav(null);
 
   // Overall progress
-  var pct = Progress.getOverallPct();
+  var pct = window.Progress.getOverallPct();
   $('dash-overall-pct').textContent = pct + '%';
   $('dash-overall-bar').style.width = pct + '%';
+
+  // Trophy banner
+  var trophy = document.getElementById('trophy-banner');
+  if (trophy) trophy.style.display = pct >= 100 ? 'block' : 'none';
 
   // Chapter cards
   var grid = $('dash-chapter-grid');
@@ -63,11 +81,14 @@ function renderDashboard() {
     if (!mod) return;
     var data = Progress.getChapterData(ch.id);
     var chPct = data.total === 0 ? 0 : Math.round((data.completed / data.total) * 100);
+    var badge = CHAPTER_BADGES[ch.id] || '';
+    var badgeClass = chPct >= 100 ? 'badge-earned' : 'badge-locked';
     var card = document.createElement('div');
     card.className = 'chapter-card';
     card.innerHTML =
       '<div class="chapter-card-header">' +
         '<span class="chapter-num">Ch ' + ch.num + '</span>' +
+        '<span class="chapter-badge ' + badgeClass + '">' + badge + '</span>' +
         '<span class="chapter-pct">' + chPct + '%</span>' +
       '</div>' +
       '<div class="chapter-title">' + mod.title + '</div>' +
@@ -581,6 +602,72 @@ function showTestResults() {
   Progress.addTestResult({ score: correct, total: total, pct: pct, passed: passed });
 }
 
+// ---- Certificate Generation ----
+function generateCertificate() {
+  var user = window.AUTH ? window.AUTH.getCurrentUser() : 'Student';
+  var name = user.charAt(0).toUpperCase() + user.slice(1);
+  var date = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+  var html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Certificate of Completion</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600&display=swap');
+  body { margin:0; background:#f5f0e8; display:flex; align-items:center; justify-content:center; min-height:100vh; font-family:'Inter',sans-serif; }
+  .cert { background:white; width:800px; min-height:560px; padding:60px 70px; text-align:center; position:relative; border:12px solid #1a2b4a; box-shadow: inset 0 0 0 4px gold, 0 20px 60px rgba(0,0,0,0.2); }
+  .cert::before { content:''; position:absolute; inset:20px; border:2px solid rgba(37,99,235,0.15); pointer-events:none; }
+  .seal { font-size:64px; margin-bottom:8px; }
+  .school { font-size:13px; font-weight:600; letter-spacing:0.15em; text-transform:uppercase; color:#2563eb; margin-bottom:20px; }
+  h1 { font-family:'Playfair Display',serif; font-size:52px; color:#1a2b4a; margin:0 0 8px; line-height:1.1; }
+  .sub { font-size:15px; color:#64748b; margin-bottom:28px; }
+  .name { font-family:'Playfair Display',serif; font-size:40px; color:#2563eb; border-bottom:2px solid #2563eb; display:inline-block; padding-bottom:8px; margin-bottom:16px; }
+  .completed { font-size:16px; color:#334155; margin-bottom:6px; }
+  .course { font-size:20px; font-weight:700; color:#1a2b4a; margin-bottom:28px; }
+  .chapters { display:flex; justify-content:center; flex-wrap:wrap; gap:8px; margin-bottom:32px; }
+  .ch-badge { background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; border-radius:99px; padding:4px 14px; font-size:13px; font-weight:600; }
+  .date { font-size:14px; color:#94a3b8; margin-bottom:24px; }
+  .footer { display:flex; justify-content:space-around; align-items:flex-end; margin-top:8px; }
+  .sig-line { width:160px; border-top:1.5px solid #334155; padding-top:8px; font-size:12px; color:#475569; }
+  @media print { body { background:white; } .cert { box-shadow:none; } .no-print { display:none; } }
+</style>
+</head>
+<body>
+<div class="cert">
+  <div class="seal">🎓</div>
+  <div class="school">Accounting Exam Prep Platform</div>
+  <h1>Certificate<br>of Completion</h1>
+  <p class="sub">This certifies that</p>
+  <div class="name">${name}</div>
+  <p class="completed">has successfully completed all 10 chapters of</p>
+  <p class="course">Managerial Accounting — Final Exam Preparation</p>
+  <div class="chapters">
+    <span class="ch-badge">🏷️ Cost Classification</span>
+    <span class="ch-badge">🔧 Job Order Costing</span>
+    <span class="ch-badge">⚗️ Process Costing</span>
+    <span class="ch-badge">📈 CVP Analysis</span>
+    <span class="ch-badge">⚖️ Variable vs Absorption</span>
+    <span class="ch-badge">📋 Master Budget</span>
+    <span class="ch-badge">🔍 Variance Analysis</span>
+    <span class="ch-badge">💰 ROI &amp; Residual Income</span>
+    <span class="ch-badge">🎯 Relevant Costs</span>
+    <span class="ch-badge">🏗️ Capital Budgeting</span>
+  </div>
+  <p class="date">Completed on ${date} · 150 practice questions mastered</p>
+  <div class="footer">
+    <div class="sig-line">Accounting Exam Prep</div>
+    <div style="font-size:40px;">🏆</div>
+    <div class="sig-line">${name}</div>
+  </div>
+</div>
+<script>window.onload = function() { window.print(); }<\/script>
+</body>
+</html>`;
+  var w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+}
+
 // ---- Event wiring ----
 document.addEventListener('DOMContentLoaded', function() {
 
@@ -777,6 +864,10 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+
+  // Certificate button
+  var certBtn = document.getElementById('cert-btn');
+  if (certBtn) certBtn.addEventListener('click', generateCertificate);
 
   // Init tools
   Calculator.init();
