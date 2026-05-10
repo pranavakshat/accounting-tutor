@@ -114,6 +114,20 @@ window.CH5 = {
       "Debit Cost of Goods Sold, Credit Manufacturing Overhead"
     ];
 
+    // Precompute all mc() results to avoid double-call shuffle bug
+    var q3mc  = mcUnits(completedUnits, [begUnits + unitsStarted, unitsStarted - endUnits, completedUnits + endUnits]);
+    var q4mc  = mcUnits(eu_mat, [eu_conv, completedUnits, endUnits + completedUnits]);
+    var q5mc  = mcUnits(eu_conv, [eu_mat, completedUnits, Math.round(endUnits * convPctEnd)]);
+    var q6mc  = mc(totalMatCost, [matAdded, begMatCost, totalConvCost]);
+    var q7mc  = mc(totalConvCost, [convAdded, begConvCost, totalMatCost]);
+    var q8mc  = mcCpeu(cpeu_mat, cpeu_conv, cpeu_mat * 1.1, cpeu_mat * 0.9);
+    var q9mc  = mcCpeu(cpeu_conv, cpeu_mat, cpeu_conv * 1.1, cpeu_conv * 0.9);
+    var q10mc = mc(ewip_mat, [ewip_conv, ewip_total, ewip_mat * 1.1]);
+    var q11mc = mc(ewip_conv, [ewip_mat, ewip_total, ewip_conv * 1.1]);
+    var q12mc = mc(fg_mat, [fg_conv, ewip_mat, fg_mat * 1.05]);
+    var q13mc = mc(fg_conv, [fg_mat, ewip_conv, fg_conv * 1.05]);
+    var q14mc = mc(fg_total, [ewip_total, grandTotalCost, fg_total * 1.05]);
+
     return {
       data: {
         begUnits: begUnits, unitsStarted: unitsStarted, endUnits: endUnits, completedUnits: completedUnits,
@@ -163,8 +177,8 @@ window.CH5 = {
           title: "Q3 — Units Completed and Transferred",
           steps: [{
             inst: "Beginning WIP is " + begUnits.toLocaleString() + " units, units started are " + unitsStarted.toLocaleString() + ", and ending WIP is " + endUnits.toLocaleString() + ". How many units were completed and transferred to Finished Goods?",
-            choices: mcUnits(completedUnits, [begUnits + unitsStarted, unitsStarted - endUnits, completedUnits + endUnits]).choices,
-            correct: mcUnits(completedUnits, [begUnits + unitsStarted, unitsStarted - endUnits, completedUnits + endUnits]).correct,
+            choices: q3mc.choices,
+            correct: q3mc.correct,
             exp: begUnits.toLocaleString() + " + " + unitsStarted.toLocaleString() + " − " + endUnits.toLocaleString() + " = " + completedUnits.toLocaleString() + " units completed",
             result: "Units completed = " + completedUnits.toLocaleString(),
             formula: "Units Completed = Beg WIP + Started − Ending WIP",
@@ -175,8 +189,8 @@ window.CH5 = {
           title: "Q4 — Equivalent Units for Materials",
           steps: [{
             inst: "Completed units = " + completedUnits.toLocaleString() + ". Ending WIP = " + endUnits.toLocaleString() + " units, " + fmtPct(matPctEnd) + " complete for materials. What are the equivalent units for materials?",
-            choices: mcUnits(eu_mat, [eu_conv, completedUnits, endUnits + completedUnits]).choices,
-            correct: mcUnits(eu_mat, [eu_conv, completedUnits, endUnits + completedUnits]).correct,
+            choices: q4mc.choices,
+            correct: q4mc.correct,
             exp: completedUnits.toLocaleString() + " + (" + endUnits.toLocaleString() + " × " + fmtPct(matPctEnd) + ") = " + eu_mat.toLocaleString() + " EU",
             result: "EU for Materials = " + eu_mat.toLocaleString(),
             formula: "EU Materials = Units Completed + Ending WIP × Material %",
@@ -187,8 +201,8 @@ window.CH5 = {
           title: "Q5 — Equivalent Units for Conversion",
           steps: [{
             inst: "Completed units = " + completedUnits.toLocaleString() + ". Ending WIP = " + endUnits.toLocaleString() + " units, " + fmtPct(convPctEnd) + " complete for conversion. What are the equivalent units for conversion?",
-            choices: mcUnits(eu_conv, [eu_mat, completedUnits, Math.round(endUnits * convPctEnd)]).choices,
-            correct: mcUnits(eu_conv, [eu_mat, completedUnits, Math.round(endUnits * convPctEnd)]).correct,
+            choices: q5mc.choices,
+            correct: q5mc.correct,
             exp: completedUnits.toLocaleString() + " + (" + endUnits.toLocaleString() + " × " + fmtPct(convPctEnd) + ") = " + eu_conv.toLocaleString() + " EU",
             result: "EU for Conversion = " + eu_conv.toLocaleString(),
             formula: "EU Conversion = Units Completed + Ending WIP × Conversion %",
@@ -199,8 +213,8 @@ window.CH5 = {
           title: "Q6 — Total Cost of Materials (Weighted Average)",
           steps: [{
             inst: "Beginning WIP had " + fmt(begMatCost) + " in materials cost. Materials added this period: " + fmt(matAdded) + ". What is the total materials cost to account for?",
-            choices: mc(totalMatCost, [matAdded, begMatCost, totalConvCost]).choices,
-            correct: mc(totalMatCost, [matAdded, begMatCost, totalConvCost]).correct,
+            choices: q6mc.choices,
+            correct: q6mc.correct,
             exp: fmt(begMatCost) + " + " + fmt(matAdded) + " = " + fmt(totalMatCost),
             result: "Total materials cost = " + fmt(totalMatCost),
             formula: "Total Cost = Beginning WIP Cost + Cost Added This Period",
@@ -211,8 +225,8 @@ window.CH5 = {
           title: "Q7 — Total Cost of Conversion (Weighted Average)",
           steps: [{
             inst: "Beginning WIP had " + fmt(begConvCost) + " in conversion cost. DL added: " + fmt(dlAdded) + ", OH added: " + fmt(ohAdded) + ". What is the total conversion cost to account for?",
-            choices: mc(totalConvCost, [convAdded, begConvCost, totalMatCost]).choices,
-            correct: mc(totalConvCost, [convAdded, begConvCost, totalMatCost]).correct,
+            choices: q7mc.choices,
+            correct: q7mc.correct,
             exp: fmt(begConvCost) + " + " + fmt(dlAdded) + " + " + fmt(ohAdded) + " = " + fmt(totalConvCost),
             result: "Total conversion cost = " + fmt(totalConvCost),
             formula: "Total Conversion Cost = Beg WIP Conv + DL Added + OH Added",
@@ -223,8 +237,8 @@ window.CH5 = {
           title: "Q8 — Cost per Equivalent Unit: Materials",
           steps: [{
             inst: "Total materials cost is " + fmt(totalMatCost) + " and equivalent units for materials are " + eu_mat.toLocaleString() + ". What is the cost per equivalent unit for materials?",
-            choices: mcCpeu(cpeu_mat, cpeu_conv, cpeu_mat * 1.1, cpeu_mat * 0.9).choices,
-            correct: mcCpeu(cpeu_mat, cpeu_conv, cpeu_mat * 1.1, cpeu_mat * 0.9).correct,
+            choices: q8mc.choices,
+            correct: q8mc.correct,
             exp: fmt(totalMatCost) + " ÷ " + eu_mat.toLocaleString() + " EU = " + fmtD(cpeu_mat) + " per EU",
             result: "Cost/EU Materials = " + fmtD(cpeu_mat),
             formula: "Cost per EU = Total Cost / Equivalent Units",
@@ -235,8 +249,8 @@ window.CH5 = {
           title: "Q9 — Cost per Equivalent Unit: Conversion",
           steps: [{
             inst: "Total conversion cost is " + fmt(totalConvCost) + " and equivalent units for conversion are " + eu_conv.toLocaleString() + ". What is the cost per equivalent unit for conversion?",
-            choices: mcCpeu(cpeu_conv, cpeu_mat, cpeu_conv * 1.1, cpeu_conv * 0.9).choices,
-            correct: mcCpeu(cpeu_conv, cpeu_mat, cpeu_conv * 1.1, cpeu_conv * 0.9).correct,
+            choices: q9mc.choices,
+            correct: q9mc.correct,
             exp: fmt(totalConvCost) + " ÷ " + eu_conv.toLocaleString() + " EU = " + fmtD(cpeu_conv) + " per EU",
             result: "Cost/EU Conversion = " + fmtD(cpeu_conv),
             formula: "Cost per EU = Total Cost / Equivalent Units",
@@ -247,8 +261,8 @@ window.CH5 = {
           title: "Q10 — Cost of Ending WIP: Materials",
           steps: [{
             inst: "Ending WIP has " + endUnits.toLocaleString() + " units at " + fmtPct(matPctEnd) + " completion for materials. Cost per EU for materials = " + fmtD(cpeu_mat) + ". What is the materials cost in ending WIP?",
-            choices: mc(ewip_mat, [ewip_conv, ewip_total, ewip_mat * 1.1]).choices,
-            correct: mc(ewip_mat, [ewip_conv, ewip_total, ewip_mat * 1.1]).correct,
+            choices: q10mc.choices,
+            correct: q10mc.correct,
             exp: endUnits.toLocaleString() + " × " + fmtPct(matPctEnd) + " × " + fmtD(cpeu_mat) + " = " + fmt(ewip_mat),
             result: "Ending WIP materials cost = " + fmt(ewip_mat),
             formula: "Ending WIP Materials = End Units × Mat % × Cost/EU Mat",
@@ -259,8 +273,8 @@ window.CH5 = {
           title: "Q11 — Cost of Ending WIP: Conversion",
           steps: [{
             inst: "Ending WIP has " + endUnits.toLocaleString() + " units at " + fmtPct(convPctEnd) + " completion for conversion. Cost per EU for conversion = " + fmtD(cpeu_conv) + ". What is the conversion cost in ending WIP?",
-            choices: mc(ewip_conv, [ewip_mat, ewip_total, ewip_conv * 1.1]).choices,
-            correct: mc(ewip_conv, [ewip_mat, ewip_total, ewip_conv * 1.1]).correct,
+            choices: q11mc.choices,
+            correct: q11mc.correct,
             exp: endUnits.toLocaleString() + " × " + fmtPct(convPctEnd) + " × " + fmtD(cpeu_conv) + " = " + fmt(ewip_conv),
             result: "Ending WIP conversion cost = " + fmt(ewip_conv),
             formula: "Ending WIP Conversion = End Units × Conv % × Cost/EU Conv",
@@ -271,8 +285,8 @@ window.CH5 = {
           title: "Q12 — Cost Transferred to FG: Materials",
           steps: [{
             inst: "Completed and transferred units = " + completedUnits.toLocaleString() + ". Cost per EU for materials = " + fmtD(cpeu_mat) + ". What is the materials cost transferred to Finished Goods?",
-            choices: mc(fg_mat, [fg_conv, ewip_mat, fg_mat * 1.05]).choices,
-            correct: mc(fg_mat, [fg_conv, ewip_mat, fg_mat * 1.05]).correct,
+            choices: q12mc.choices,
+            correct: q12mc.correct,
             exp: completedUnits.toLocaleString() + " × " + fmtD(cpeu_mat) + " = " + fmt(fg_mat),
             result: "FG materials cost transferred = " + fmt(fg_mat),
             formula: "Cost Transferred (Mat) = Units Completed × Cost/EU Mat",
@@ -283,8 +297,8 @@ window.CH5 = {
           title: "Q13 — Cost Transferred to FG: Conversion",
           steps: [{
             inst: "Completed and transferred units = " + completedUnits.toLocaleString() + ". Cost per EU for conversion = " + fmtD(cpeu_conv) + ". What is the conversion cost transferred to Finished Goods?",
-            choices: mc(fg_conv, [fg_mat, ewip_conv, fg_conv * 1.05]).choices,
-            correct: mc(fg_conv, [fg_mat, ewip_conv, fg_conv * 1.05]).correct,
+            choices: q13mc.choices,
+            correct: q13mc.correct,
             exp: completedUnits.toLocaleString() + " × " + fmtD(cpeu_conv) + " = " + fmt(fg_conv),
             result: "FG conversion cost transferred = " + fmt(fg_conv),
             formula: "Cost Transferred (Conv) = Units Completed × Cost/EU Conv",
@@ -295,8 +309,8 @@ window.CH5 = {
           title: "Q14 — Total Cost Transferred to Finished Goods",
           steps: [{
             inst: "Materials cost transferred = " + fmt(fg_mat) + ". Conversion cost transferred = " + fmt(fg_conv) + ". What is the total cost transferred to Finished Goods?",
-            choices: mc(fg_total, [ewip_total, grandTotalCost, fg_total * 1.05]).choices,
-            correct: mc(fg_total, [ewip_total, grandTotalCost, fg_total * 1.05]).correct,
+            choices: q14mc.choices,
+            correct: q14mc.correct,
             exp: fmt(fg_mat) + " + " + fmt(fg_conv) + " = " + fmt(fg_total),
             result: "Total cost transferred to FG = " + fmt(fg_total),
             formula: "Total FG Cost = Materials Transferred + Conversion Transferred",

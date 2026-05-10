@@ -106,6 +106,65 @@ window.CH8 = {
     var collFromCurrent = Math.round(collPct / 100 * sales2);
     var collFromPrior = Math.round((100 - collPct) / 100 * sales1);
 
+    // Precompute all mc() results to avoid double-call shuffle bug
+    var q1mc = mc(sales2, [sales1, units[2] * price, units[0] * price]);
+    var q2s1mc = mc(collFromCurrent, [Math.round((100 - collPct) / 100 * sales2), sales2, Math.round(collPct / 100 * sales1)]);
+    var q2s2mc = mc(collFromPrior, [Math.round(collPct / 100 * sales1), sales1, Math.round((100 - collPct) / 100 * sales2)]);
+    var q2s3mc = mc(collections, [Math.round(collections * 0.9), Math.round(collections * 1.1), sales2]);
+    var q3mc = mc(ar, [sales2, Math.round(ar * 0.5), collFromCurrent]);
+    var q4s1 = (function() {
+      var pool = [endFG, beginFG, endFGNext, units[1]].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
+      while (pool.length < 4) pool.push(endFG + pool.length * 100);
+      var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
+      return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtN(v) + ' units'; }), correct: s.indexOf(endFG) };
+    })();
+    var q4s2 = (function() {
+      var pool = [beginFG, endFG, units[0], Math.round(units[0] * fgPct / 100)].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
+      while (pool.length < 4) pool.push(beginFG + pool.length * 100);
+      var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
+      return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtN(v) + ' units'; }), correct: s.indexOf(beginFG) };
+    })();
+    var q4s3 = (function() {
+      var pool = [production, units[1], production + endFG, production - beginFG].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
+      while (pool.length < 4) pool.push(production + pool.length * 100);
+      var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
+      return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtN(v) + ' units'; }), correct: s.indexOf(production) };
+    })();
+    var q5s1 = (function() {
+      var pool = [rmNeeded, rmNeeded + 1000, rmNeeded - 1000, units[1] * lbsPerUnit].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
+      while (pool.length < 4) pool.push(rmNeeded + pool.length * 500);
+      var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
+      return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtN(v) + ' lbs'; }), correct: s.indexOf(rmNeeded) };
+    })();
+    var q5s2 = (function() {
+      var pool = [endRM, beginRM, Math.round(rmNeededNext * rmEndPct / 100) + 1000, endRM + 500].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
+      while (pool.length < 4) pool.push(endRM + pool.length * 200);
+      var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
+      return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtN(v) + ' lbs'; }), correct: s.indexOf(endRM) };
+    })();
+    var q5s3 = (function() {
+      var pool = [rmPurchaseLbs, rmNeeded, rmPurchaseLbs + endRM, rmPurchaseLbs - beginRM].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
+      while (pool.length < 4) pool.push(rmPurchaseLbs + pool.length * 500);
+      var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
+      return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtN(v) + ' lbs'; }), correct: s.indexOf(rmPurchaseLbs) };
+    })();
+    var q6mc = mc(rmPurchaseCost, [rmPurchaseLbs, Math.round(rmPurchaseCost * 1.1), Math.round(rmPurchaseCost * 0.9)]);
+    var q7s1mc = mc(Math.round(rmPayPct / 100 * rmPurchaseCost), [Math.round((100 - rmPayPct) / 100 * rmPurchaseCost), Math.round(rmPurchaseCost), Math.round(rmPayPct / 100 * priorRmCost)]);
+    var q7s2mc = mc(Math.round((100 - rmPayPct) / 100 * priorRmCost), [Math.round(rmPayPct / 100 * priorRmCost), Math.round(priorRmCost), Math.round((100 - rmPayPct) / 100 * rmPurchaseCost)]);
+    var q7s3mc = mc(cashDisb, [Math.round(cashDisb * 0.9), Math.round(cashDisb * 1.1), Math.round(rmPurchaseCost)]);
+    var q8mc = mc(ap, [Math.round(rmPurchaseCost), Math.round(rmPayPct / 100 * rmPurchaseCost), Math.round(priorRmCost)]);
+    var q9mc = mc(rmInventory, [endRM, Math.round(rmInventory * 1.1), Math.round(beginRM * costPerLb)]);
+    var q10mc = mc(dlCost, [production * dlRate, Math.round(dlCost * 1.1), Math.round(dlCost * 0.9)]);
+    var q11s1mc = mc(dmUnit, [lbsPerUnit, costPerLb, dmUnit + 1]);
+    var q11s2mc = mc(dlUnit, [dlHours, dlRate, dlUnit + 2]);
+    var q11s3mc = mc(vmohUnit, [varMOH, dlHours, vmohUnit + dlHours]);
+    var q11s4mc = mc(unitCost, [dmUnit + dlUnit, unitCost + vmohUnit, unitCost - dlUnit]);
+    var q12mc = mc(endFGValue, [endFG * price, Math.round(endFGValue * 1.1), Math.round(production * unitCost)]);
+    var q13s1mc = mc(cogs, [Math.round(production * unitCost), Math.round(cogs * 1.1), Math.round(cogs * 0.9)]);
+    var q13s2mc = mc(grossMargin, [Math.round(grossMargin * 0.9), Math.round(grossMargin + fixedSA), Math.round(grossMargin - varSA * units[1])]);
+    var q14mc = mc(sa, [varSA * units[1], fixedSA, Math.round(sa + fixedSA)]);
+    var q15mc = mc(noi, [grossMargin, Math.round(noi + sa), Math.round(noi - fixedSA)]);
+
     return {
       data: { price: price, units: units, collPct: collPct, fgPct: fgPct, lbsPerUnit: lbsPerUnit, costPerLb: costPerLb, rmEndPct: rmEndPct, rmPayPct: rmPayPct, dlHours: dlHours, dlRate: dlRate, varSA: varSA, fixedSA: fixedSA, varMOH: varMOH, priorRmCost: priorRmCost, rmNeededNext: rmNeededNext },
       dataTable: [
@@ -128,8 +187,8 @@ window.CH8 = {
           title: "Q1 — Budgeted sales for current month",
           steps: [{
             inst: "What are the budgeted sales for the current month?",
-            choices: mc(sales2, [sales1, units[2] * price, units[0] * price]).choices,
-            correct: mc(sales2, [sales1, units[2] * price, units[0] * price]).correct,
+            choices: q1mc.choices,
+            correct: q1mc.correct,
             exp: fmtN(units[1]) + " units × " + fmt(price) + " = " + fmt(sales2),
             result: "Budgeted sales = " + fmt(sales2),
             formula: "Budgeted Sales = Units × Selling Price",
@@ -141,8 +200,8 @@ window.CH8 = {
           steps: [
             {
               inst: "How much cash is collected from current month's own sales?",
-              choices: mc(collFromCurrent, [Math.round((100 - collPct) / 100 * sales2), sales2, Math.round(collPct / 100 * sales1)]).choices,
-              correct: mc(collFromCurrent, [Math.round((100 - collPct) / 100 * sales2), sales2, Math.round(collPct / 100 * sales1)]).correct,
+              choices: q2s1mc.choices,
+              correct: q2s1mc.correct,
               exp: collPct + "% × " + fmt(sales2) + " = " + fmt(collFromCurrent),
               result: "Current mo portion = " + fmt(collFromCurrent),
               formula: "Collections from current month = " + collPct + "% × current month sales",
@@ -150,8 +209,8 @@ window.CH8 = {
             },
             {
               inst: "How much cash is collected from prior month's sales?",
-              choices: mc(collFromPrior, [Math.round(collPct / 100 * sales1), sales1, Math.round((100 - collPct) / 100 * sales2)]).choices,
-              correct: mc(collFromPrior, [Math.round(collPct / 100 * sales1), sales1, Math.round((100 - collPct) / 100 * sales2)]).correct,
+              choices: q2s2mc.choices,
+              correct: q2s2mc.correct,
               exp: (100 - collPct) + "% × " + fmt(sales1) + " = " + fmt(collFromPrior),
               result: "Prior mo portion = " + fmt(collFromPrior),
               formula: "Collections from prior month = " + (100 - collPct) + "% × prior month sales",
@@ -159,8 +218,8 @@ window.CH8 = {
             },
             {
               inst: "What are the total cash collections for the current month?",
-              choices: mc(collections, [Math.round(collections * 0.9), Math.round(collections * 1.1), sales2]).choices,
-              correct: mc(collections, [Math.round(collections * 0.9), Math.round(collections * 1.1), sales2]).correct,
+              choices: q2s3mc.choices,
+              correct: q2s3mc.correct,
               exp: fmt(collFromCurrent) + " + " + fmt(collFromPrior) + " = " + fmt(collections),
               result: "Total collections = " + fmt(collections),
               formula: "Total Collections = current month portion + prior month portion",
@@ -172,8 +231,8 @@ window.CH8 = {
           title: "Q3 — Accounts receivable at end of month",
           steps: [{
             inst: "What is the accounts receivable balance at the end of the current month?",
-            choices: mc(ar, [sales2, Math.round(ar * 0.5), collFromCurrent]).choices,
-            correct: mc(ar, [sales2, Math.round(ar * 0.5), collFromCurrent]).correct,
+            choices: q3mc.choices,
+            correct: q3mc.correct,
             exp: (100 - collPct) + "% of " + fmt(sales2) + " = " + fmt(ar),
             result: "AR balance = " + fmt(ar),
             formula: "AR = " + (100 - collPct) + "% × current month sales (uncollected portion)",
@@ -185,18 +244,8 @@ window.CH8 = {
           steps: [
             {
               inst: "What is the desired ending finished goods inventory (in units)?",
-              choices: (function() {
-                var pool = [endFG, beginFG, endFGNext, units[1]].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
-                while (pool.length < 4) pool.push(endFG + pool.length * 100);
-                var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
-                return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtN(v) + ' units'; }), correct: s.indexOf(endFG) };
-              })().choices,
-              correct: (function() {
-                var pool = [endFG, beginFG, endFGNext, units[1]].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
-                while (pool.length < 4) pool.push(endFG + pool.length * 100);
-                var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
-                return s.indexOf(endFG);
-              })(),
+              choices: q4s1.choices,
+              correct: q4s1.correct,
               exp: fgPct + "% × " + fmtN(units[2]) + " next month units = " + fmtN(endFG) + " units",
               result: "Ending FG = " + fmtN(endFG) + " units",
               formula: "Ending FG = " + fgPct + "% × next month's budgeted sales units",
@@ -204,18 +253,8 @@ window.CH8 = {
             },
             {
               inst: "What is the beginning finished goods inventory (in units)?",
-              choices: (function() {
-                var pool = [beginFG, endFG, units[0], Math.round(units[0] * fgPct / 100)].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
-                while (pool.length < 4) pool.push(beginFG + pool.length * 100);
-                var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
-                return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtN(v) + ' units'; }), correct: s.indexOf(beginFG) };
-              })().choices,
-              correct: (function() {
-                var pool = [beginFG, endFG, units[0], Math.round(units[0] * fgPct / 100)].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
-                while (pool.length < 4) pool.push(beginFG + pool.length * 100);
-                var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
-                return s.indexOf(beginFG);
-              })(),
+              choices: q4s2.choices,
+              correct: q4s2.correct,
               exp: fgPct + "% × " + fmtN(units[1]) + " current month units = " + fmtN(beginFG) + " units",
               result: "Beginning FG = " + fmtN(beginFG) + " units",
               formula: "Beginning FG = " + fgPct + "% × current month's budgeted sales units",
@@ -223,18 +262,8 @@ window.CH8 = {
             },
             {
               inst: "How many units must be produced?",
-              choices: (function() {
-                var pool = [production, units[1], production + endFG, production - beginFG].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
-                while (pool.length < 4) pool.push(production + pool.length * 100);
-                var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
-                return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtN(v) + ' units'; }), correct: s.indexOf(production) };
-              })().choices,
-              correct: (function() {
-                var pool = [production, units[1], production + endFG, production - beginFG].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
-                while (pool.length < 4) pool.push(production + pool.length * 100);
-                var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
-                return s.indexOf(production);
-              })(),
+              choices: q4s3.choices,
+              correct: q4s3.correct,
               exp: fmtN(units[1]) + " + " + fmtN(endFG) + " − " + fmtN(beginFG) + " = " + fmtN(production) + " units",
               result: "Production = " + fmtN(production) + " units",
               formula: "Production = Sales + Ending FG − Beginning FG",
@@ -247,18 +276,8 @@ window.CH8 = {
           steps: [
             {
               inst: "How many pounds of raw materials are needed for current month production?",
-              choices: (function() {
-                var pool = [rmNeeded, rmNeeded + 1000, rmNeeded - 1000, units[1] * lbsPerUnit].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
-                while (pool.length < 4) pool.push(rmNeeded + pool.length * 500);
-                var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
-                return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtN(v) + ' lbs'; }), correct: s.indexOf(rmNeeded) };
-              })().choices,
-              correct: (function() {
-                var pool = [rmNeeded, rmNeeded + 1000, rmNeeded - 1000, units[1] * lbsPerUnit].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
-                while (pool.length < 4) pool.push(rmNeeded + pool.length * 500);
-                var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
-                return s.indexOf(rmNeeded);
-              })(),
+              choices: q5s1.choices,
+              correct: q5s1.correct,
               exp: fmtN(production) + " units × " + lbsPerUnit + " lbs = " + fmtN(rmNeeded) + " lbs",
               result: "RM needed = " + fmtN(rmNeeded) + " lbs",
               formula: "RM needed = Units to produce × lbs per unit",
@@ -266,18 +285,8 @@ window.CH8 = {
             },
             {
               inst: "What is the desired ending raw materials inventory (lbs)?",
-              choices: (function() {
-                var pool = [endRM, beginRM, Math.round(rmNeededNext * rmEndPct / 100) + 1000, endRM + 500].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
-                while (pool.length < 4) pool.push(endRM + pool.length * 200);
-                var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
-                return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtN(v) + ' lbs'; }), correct: s.indexOf(endRM) };
-              })().choices,
-              correct: (function() {
-                var pool = [endRM, beginRM, Math.round(rmNeededNext * rmEndPct / 100) + 1000, endRM + 500].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
-                while (pool.length < 4) pool.push(endRM + pool.length * 200);
-                var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
-                return s.indexOf(endRM);
-              })(),
+              choices: q5s2.choices,
+              correct: q5s2.correct,
               exp: rmEndPct + "% × " + fmtN(rmNeededNext) + " lbs (next month needs) = " + fmtN(endRM) + " lbs",
               result: "Ending RM = " + fmtN(endRM) + " lbs",
               formula: "Ending RM = " + rmEndPct + "% × next month's RM production needs",
@@ -285,18 +294,8 @@ window.CH8 = {
             },
             {
               inst: "How many pounds should be purchased? (Beginning RM = " + fmtN(beginRM) + " lbs)",
-              choices: (function() {
-                var pool = [rmPurchaseLbs, rmNeeded, rmPurchaseLbs + endRM, rmPurchaseLbs - beginRM].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
-                while (pool.length < 4) pool.push(rmPurchaseLbs + pool.length * 500);
-                var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
-                return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtN(v) + ' lbs'; }), correct: s.indexOf(rmPurchaseLbs) };
-              })().choices,
-              correct: (function() {
-                var pool = [rmPurchaseLbs, rmNeeded, rmPurchaseLbs + endRM, rmPurchaseLbs - beginRM].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
-                while (pool.length < 4) pool.push(rmPurchaseLbs + pool.length * 500);
-                var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
-                return s.indexOf(rmPurchaseLbs);
-              })(),
+              choices: q5s3.choices,
+              correct: q5s3.correct,
               exp: fmtN(rmNeeded) + " + " + fmtN(endRM) + " − " + fmtN(beginRM) + " = " + fmtN(rmPurchaseLbs) + " lbs",
               result: "RM to purchase = " + fmtN(rmPurchaseLbs) + " lbs",
               formula: "Purchases = RM needed + Ending RM − Beginning RM",
@@ -308,8 +307,8 @@ window.CH8 = {
           title: "Q6 — Cost of raw materials purchases",
           steps: [{
             inst: "What is the total dollar cost of raw materials to be purchased?",
-            choices: mc(rmPurchaseCost, [rmPurchaseLbs, Math.round(rmPurchaseCost * 1.1), Math.round(rmPurchaseCost * 0.9)]).choices,
-            correct: mc(rmPurchaseCost, [rmPurchaseLbs, Math.round(rmPurchaseCost * 1.1), Math.round(rmPurchaseCost * 0.9)]).correct,
+            choices: q6mc.choices,
+            correct: q6mc.correct,
             exp: fmtN(rmPurchaseLbs) + " lbs × " + fmt(costPerLb) + " = " + fmt(rmPurchaseCost),
             result: "RM cost = " + fmt(rmPurchaseCost),
             formula: "RM Purchase Cost = Pounds × Cost per Pound",
@@ -321,8 +320,8 @@ window.CH8 = {
           steps: [
             {
               inst: "How much of current month's purchases are paid this month?",
-              choices: mc(Math.round(rmPayPct / 100 * rmPurchaseCost), [Math.round((100 - rmPayPct) / 100 * rmPurchaseCost), Math.round(rmPurchaseCost), Math.round(rmPayPct / 100 * priorRmCost)]).choices,
-              correct: mc(Math.round(rmPayPct / 100 * rmPurchaseCost), [Math.round((100 - rmPayPct) / 100 * rmPurchaseCost), Math.round(rmPurchaseCost), Math.round(rmPayPct / 100 * priorRmCost)]).correct,
+              choices: q7s1mc.choices,
+              correct: q7s1mc.correct,
               exp: rmPayPct + "% × " + fmt(rmPurchaseCost) + " = " + fmt(Math.round(rmPayPct / 100 * rmPurchaseCost)),
               result: rmPayPct + "% of current = " + fmt(Math.round(rmPayPct / 100 * rmPurchaseCost)),
               formula: "Pay " + rmPayPct + "% of current month purchases this month",
@@ -330,8 +329,8 @@ window.CH8 = {
             },
             {
               inst: "How much of prior month's purchases are paid this month? (Prior purchases = " + fmt(priorRmCost) + ")",
-              choices: mc(Math.round((100 - rmPayPct) / 100 * priorRmCost), [Math.round(rmPayPct / 100 * priorRmCost), Math.round(priorRmCost), Math.round((100 - rmPayPct) / 100 * rmPurchaseCost)]).choices,
-              correct: mc(Math.round((100 - rmPayPct) / 100 * priorRmCost), [Math.round(rmPayPct / 100 * priorRmCost), Math.round(priorRmCost), Math.round((100 - rmPayPct) / 100 * rmPurchaseCost)]).correct,
+              choices: q7s2mc.choices,
+              correct: q7s2mc.correct,
               exp: (100 - rmPayPct) + "% × " + fmt(priorRmCost) + " = " + fmt(Math.round((100 - rmPayPct) / 100 * priorRmCost)),
               result: (100 - rmPayPct) + "% of prior = " + fmt(Math.round((100 - rmPayPct) / 100 * priorRmCost)),
               formula: "Pay " + (100 - rmPayPct) + "% of prior month purchases this month",
@@ -339,8 +338,8 @@ window.CH8 = {
             },
             {
               inst: "What are the total cash disbursements for raw materials?",
-              choices: mc(cashDisb, [Math.round(cashDisb * 0.9), Math.round(cashDisb * 1.1), Math.round(rmPurchaseCost)]).choices,
-              correct: mc(cashDisb, [Math.round(cashDisb * 0.9), Math.round(cashDisb * 1.1), Math.round(rmPurchaseCost)]).correct,
+              choices: q7s3mc.choices,
+              correct: q7s3mc.correct,
               exp: fmt(Math.round(rmPayPct / 100 * rmPurchaseCost)) + " + " + fmt(Math.round((100 - rmPayPct) / 100 * priorRmCost)) + " = " + fmt(cashDisb),
               result: "Total disbursements = " + fmt(cashDisb),
               formula: "Total = current month paid + prior month paid",
@@ -352,8 +351,8 @@ window.CH8 = {
           title: "Q8 — Accounts payable at end of month",
           steps: [{
             inst: "How much of current month's purchases remain unpaid at month-end?",
-            choices: mc(ap, [Math.round(rmPurchaseCost), Math.round(rmPayPct / 100 * rmPurchaseCost), Math.round(priorRmCost)]).choices,
-            correct: mc(ap, [Math.round(rmPurchaseCost), Math.round(rmPayPct / 100 * rmPurchaseCost), Math.round(priorRmCost)]).correct,
+            choices: q8mc.choices,
+            correct: q8mc.correct,
             exp: (100 - rmPayPct) + "% × " + fmt(rmPurchaseCost) + " = " + fmt(ap),
             result: "AP balance = " + fmt(ap),
             formula: "AP = " + (100 - rmPayPct) + "% × current month purchases",
@@ -364,8 +363,8 @@ window.CH8 = {
           title: "Q9 — Raw materials inventory at end of month",
           steps: [{
             inst: "What is the dollar value of the ending raw materials inventory?",
-            choices: mc(rmInventory, [endRM, Math.round(rmInventory * 1.1), Math.round(beginRM * costPerLb)]).choices,
-            correct: mc(rmInventory, [endRM, Math.round(rmInventory * 1.1), Math.round(beginRM * costPerLb)]).correct,
+            choices: q9mc.choices,
+            correct: q9mc.correct,
             exp: fmtN(endRM) + " lbs × " + fmt(costPerLb) + "/lb = " + fmt(rmInventory),
             result: "RM inventory = " + fmt(rmInventory),
             formula: "RM Inventory = Ending RM lbs × Cost per Pound",
@@ -376,8 +375,8 @@ window.CH8 = {
           title: "Q10 — Total direct labor cost",
           steps: [{
             inst: "What is the total direct labor cost for current month production?",
-            choices: mc(dlCost, [production * dlRate, Math.round(dlCost * 1.1), Math.round(dlCost * 0.9)]).choices,
-            correct: mc(dlCost, [production * dlRate, Math.round(dlCost * 1.1), Math.round(dlCost * 0.9)]).correct,
+            choices: q10mc.choices,
+            correct: q10mc.correct,
             exp: fmtN(production) + " units × " + dlHours + " hr" + (dlHours > 1 ? "s" : "") + " × " + fmt(dlRate) + " = " + fmt(dlCost),
             result: "DL cost = " + fmt(dlCost),
             formula: "DL Cost = Production × Hours per Unit × Wage Rate",
@@ -389,8 +388,8 @@ window.CH8 = {
           steps: [
             {
               inst: "What is the direct materials cost per unit?",
-              choices: mc(dmUnit, [lbsPerUnit, costPerLb, dmUnit + 1]).choices,
-              correct: mc(dmUnit, [lbsPerUnit, costPerLb, dmUnit + 1]).correct,
+              choices: q11s1mc.choices,
+              correct: q11s1mc.correct,
               exp: lbsPerUnit + " lbs × " + fmt(costPerLb) + "/lb = " + fmt(dmUnit),
               result: "DM = " + fmt(dmUnit) + "/unit",
               formula: "DM per unit = lbs per unit × cost per lb",
@@ -398,8 +397,8 @@ window.CH8 = {
             },
             {
               inst: "What is the direct labor cost per unit?",
-              choices: mc(dlUnit, [dlHours, dlRate, dlUnit + 2]).choices,
-              correct: mc(dlUnit, [dlHours, dlRate, dlUnit + 2]).correct,
+              choices: q11s2mc.choices,
+              correct: q11s2mc.correct,
               exp: dlHours + " hr" + (dlHours > 1 ? "s" : "") + " × " + fmt(dlRate) + "/hr = " + fmt(dlUnit),
               result: "DL = " + fmt(dlUnit) + "/unit",
               formula: "DL per unit = Hours per unit × Wage rate",
@@ -407,8 +406,8 @@ window.CH8 = {
             },
             {
               inst: "What is the variable manufacturing overhead per unit?",
-              choices: mc(vmohUnit, [varMOH, dlHours, vmohUnit + dlHours]).choices,
-              correct: mc(vmohUnit, [varMOH, dlHours, vmohUnit + dlHours]).correct,
+              choices: q11s3mc.choices,
+              correct: q11s3mc.correct,
               exp: dlHours + " DL-hr" + (dlHours > 1 ? "s" : "") + " × " + fmt(varMOH) + "/hr = " + fmt(vmohUnit),
               result: "Var MOH = " + fmt(vmohUnit) + "/unit",
               formula: "Var MOH per unit = DL hours per unit × Variable MOH rate",
@@ -416,8 +415,8 @@ window.CH8 = {
             },
             {
               inst: "What is the total unit product cost?",
-              choices: mc(unitCost, [dmUnit + dlUnit, unitCost + vmohUnit, unitCost - dlUnit]).choices,
-              correct: mc(unitCost, [dmUnit + dlUnit, unitCost + vmohUnit, unitCost - dlUnit]).correct,
+              choices: q11s4mc.choices,
+              correct: q11s4mc.correct,
               exp: fmt(dmUnit) + " + " + fmt(dlUnit) + " + " + fmt(vmohUnit) + " = " + fmt(unitCost) + "/unit",
               result: "Unit cost = " + fmt(unitCost),
               formula: "Unit Product Cost = DM + DL + Variable MOH",
@@ -429,8 +428,8 @@ window.CH8 = {
           title: "Q12 — Ending finished goods inventory value",
           steps: [{
             inst: "What is the dollar value of the ending finished goods inventory?",
-            choices: mc(endFGValue, [endFG * price, Math.round(endFGValue * 1.1), Math.round(production * unitCost)]).choices,
-            correct: mc(endFGValue, [endFG * price, Math.round(endFGValue * 1.1), Math.round(production * unitCost)]).correct,
+            choices: q12mc.choices,
+            correct: q12mc.correct,
             exp: fmtN(endFG) + " units × " + fmt(unitCost) + "/unit = " + fmt(endFGValue),
             result: "Ending FG = " + fmt(endFGValue),
             formula: "Ending FG Value = Ending FG Units × Unit Product Cost",
@@ -442,8 +441,8 @@ window.CH8 = {
           steps: [
             {
               inst: "What is the cost of goods sold for the current month?",
-              choices: mc(cogs, [Math.round(production * unitCost), Math.round(cogs * 1.1), Math.round(cogs * 0.9)]).choices,
-              correct: mc(cogs, [Math.round(production * unitCost), Math.round(cogs * 1.1), Math.round(cogs * 0.9)]).correct,
+              choices: q13s1mc.choices,
+              correct: q13s1mc.correct,
               exp: fmtN(units[1]) + " units sold × " + fmt(unitCost) + "/unit = " + fmt(cogs),
               result: "COGS = " + fmt(cogs),
               formula: "COGS = Units Sold × Unit Product Cost",
@@ -451,8 +450,8 @@ window.CH8 = {
             },
             {
               inst: "What is the gross margin for the current month?",
-              choices: mc(grossMargin, [Math.round(grossMargin * 0.9), Math.round(grossMargin + fixedSA), Math.round(grossMargin - varSA * units[1])]).choices,
-              correct: mc(grossMargin, [Math.round(grossMargin * 0.9), Math.round(grossMargin + fixedSA), Math.round(grossMargin - varSA * units[1])]).correct,
+              choices: q13s2mc.choices,
+              correct: q13s2mc.correct,
               exp: fmt(sales2) + " − " + fmt(cogs) + " = " + fmt(grossMargin),
               result: "Gross margin = " + fmt(grossMargin),
               formula: "Gross Margin = Sales − COGS",
@@ -464,8 +463,8 @@ window.CH8 = {
           title: "Q14 — Total selling and administrative expense",
           steps: [{
             inst: "What is the total S&A expense for the current month?",
-            choices: mc(sa, [varSA * units[1], fixedSA, Math.round(sa + fixedSA)]).choices,
-            correct: mc(sa, [varSA * units[1], fixedSA, Math.round(sa + fixedSA)]).correct,
+            choices: q14mc.choices,
+            correct: q14mc.correct,
             exp: "(" + fmt(varSA) + " × " + fmtN(units[1]) + " units) + " + fmt(fixedSA) + " = " + fmt(sa),
             result: "S&A = " + fmt(sa),
             formula: "S&A = (Variable rate × Units Sold) + Fixed S&A",
@@ -476,8 +475,8 @@ window.CH8 = {
           title: "Q15 — Net operating income",
           steps: [{
             inst: "What is the net operating income for the current month?",
-            choices: mc(noi, [grossMargin, Math.round(noi + sa), Math.round(noi - fixedSA)]).choices,
-            correct: mc(noi, [grossMargin, Math.round(noi + sa), Math.round(noi - fixedSA)]).correct,
+            choices: q15mc.choices,
+            correct: q15mc.correct,
             exp: fmt(grossMargin) + " − " + fmt(sa) + " = " + fmt(noi),
             result: "NOI = " + fmt(noi),
             formula: "NOI = Gross Margin − S&A Expense",

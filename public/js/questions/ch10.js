@@ -47,6 +47,43 @@ window.CH10 = {
       return { choices: s.map(function(v, i) { return letters[i] + '. ' + fmtP(v); }), correct: s.indexOf(correct) };
     }
 
+    // Dedicated turnover formatter: displays as "X.XXx" (ratio, not percentage)
+    var fmtTurnover = function(v) { return (Math.round(v * 100) / 100).toFixed(2) + 'x'; };
+
+    // Precompute all mc() results to avoid double-call shuffle bug
+    var q1mc = mcPct(margin, [margin * 1.2, roi, margin * 0.8]);
+
+    // Q2: Asset Turnover — use fmtTurnover (not fmtP) to show ratio correctly
+    var q2 = (function() {
+      var pool = [turnover, turnover * 1.2, turnover * 0.8, roi].filter(function(w) { return w !== turnover; });
+      pool = [turnover].concat(pool).slice(0, 4);
+      while (pool.length < 4) pool.push(turnover * (1 + 0.15 * pool.length));
+      var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
+      var letters = ['A', 'B', 'C', 'D'];
+      return { choices: s.map(function(v, i) { return letters[i] + '. ' + fmtTurnover(v); }), correct: s.indexOf(turnover) };
+    })();
+
+    var q3mc = mcPct(roi, [roi * 1.15, roi * 0.85, minReturn]);
+    var q4s1mc = mcDollar(Math.round(minReturn * assets), [Math.round(noi), Math.round(assets * roi), Math.round(assets * 0.1)]);
+    var q4s2mc = mcDollar(Math.round(ri), [Math.round(noi), Math.round(ri * 1.2), Math.round(ri * 0.8)]);
+    var q8 = (function() {
+      var na = Math.round(assets*0.80); var nr = noi/na;
+      var pool = [nr, roi, nr*0.8, roi*1.3].map(function(v){return Math.round(v*1000)/1000;}).filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
+      while(pool.length<4) pool.push(Math.round(nr*(1+pool.length*0.12)*1000)/1000);
+      var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+      return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmtP(v);}),correct:s.map(function(v){return Math.round(v*1000);}).indexOf(Math.round(nr*1000))};
+    })();
+    var q10 = (function() {
+      var pa=Math.round(assets*0.15); var pn=Math.round(pa*roi*0.85); var pr=pn-Math.round(minReturn*pa);
+      var pool=[pr, Math.round(pn), Math.round(minReturn*pa), pr-2000].filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,4);
+      while(pool.length<4) pool.push(pr+pool.length*1000);
+      var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+      return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.map(Math.round).indexOf(Math.round(pr))};
+    })();
+    var q12mc = mcDollar(noi, [Math.round(noi*1.2), Math.round(noi*0.8), Math.round(assets*minReturn)]);
+    var q13mc = mcDollar(assets, [Math.round(assets*1.25), Math.round(assets*0.75), Math.round(sales*turnover)]);
+    var q14mc = mcDollar(sales, [Math.round(sales*1.2), Math.round(sales*0.8), Math.round(noi/roi)]);
+
     return {
       data: { sales: sales, noi: noi, assets: assets, margin: margin, turnover: turnover, roi: roi, ri: ri, minReturn: minReturn },
       dataTable: [
@@ -60,8 +97,8 @@ window.CH10 = {
           title: "Q1 — Profit Margin",
           steps: [{
             inst: "What is the profit margin for this division?",
-            choices: mcPct(margin, [margin * 1.2, roi, margin * 0.8]).choices,
-            correct: mcPct(margin, [margin * 1.2, roi, margin * 0.8]).correct,
+            choices: q1mc.choices,
+            correct: q1mc.correct,
             exp: fmt(noi) + " ÷ " + fmt(sales) + " = " + fmtP(margin),
             result: "Margin = " + fmtP(margin),
             formula: "Margin = Net Operating Income ÷ Sales",
@@ -72,10 +109,10 @@ window.CH10 = {
           title: "Q2 — Asset Turnover",
           steps: [{
             inst: "What is the asset turnover for this division?",
-            choices: mcPct(turnover, [turnover * 1.2, turnover * 0.8, roi]).choices,
-            correct: mcPct(turnover, [turnover * 1.2, turnover * 0.8, roi]).correct,
-            exp: fmt(sales) + " ÷ " + fmt(assets) + " = " + fmtP(turnover),
-            result: "Turnover = " + fmtP(turnover),
+            choices: q2.choices,
+            correct: q2.correct,
+            exp: fmt(sales) + " ÷ " + fmt(assets) + " = " + fmtTurnover(turnover),
+            result: "Turnover = " + fmtTurnover(turnover),
             formula: "Turnover = Sales ÷ Average Operating Assets",
             numbers: "Sales = " + fmt(sales) + ", Assets = " + fmt(assets)
           }]
@@ -84,12 +121,12 @@ window.CH10 = {
           title: "Q3 — Return on Investment (ROI)",
           steps: [{
             inst: "What is the return on investment for this division?",
-            choices: mcPct(roi, [roi * 1.15, roi * 0.85, minReturn]).choices,
-            correct: mcPct(roi, [roi * 1.15, roi * 0.85, minReturn]).correct,
-            exp: fmtP(margin) + " × " + fmtP(turnover) + " = " + fmtP(roi) + " (or " + fmt(noi) + " ÷ " + fmt(assets) + ")",
+            choices: q3mc.choices,
+            correct: q3mc.correct,
+            exp: fmtP(margin) + " × " + fmtTurnover(turnover) + " = " + fmtP(roi) + " (or " + fmt(noi) + " ÷ " + fmt(assets) + ")",
             result: "ROI = " + fmtP(roi),
             formula: "ROI = Margin × Turnover (or NOI ÷ Assets)",
-            numbers: "Margin = " + fmtP(margin) + ", Turnover = " + fmtP(turnover)
+            numbers: "Margin = " + fmtP(margin) + ", Turnover = " + fmtTurnover(turnover)
           }]
         },
         {
@@ -97,8 +134,8 @@ window.CH10 = {
           steps: [
             {
               inst: "What is the minimum required return in dollars?",
-              choices: mcDollar(Math.round(minReturn * assets), [Math.round(noi), Math.round(assets * roi), Math.round(assets * 0.1)]).choices,
-              correct: mcDollar(Math.round(minReturn * assets), [Math.round(noi), Math.round(assets * roi), Math.round(assets * 0.1)]).correct,
+              choices: q4s1mc.choices,
+              correct: q4s1mc.correct,
               exp: fmtP(minReturn) + " × " + fmt(assets) + " = " + fmt(minReturn * assets),
               result: "Min required = " + fmt(minReturn * assets),
               formula: "Min Required Return $ = Min Rate × Operating Assets",
@@ -106,8 +143,8 @@ window.CH10 = {
             },
             {
               inst: "What is the residual income?",
-              choices: mcDollar(Math.round(ri), [Math.round(noi), Math.round(ri * 1.2), Math.round(ri * 0.8)]).choices,
-              correct: mcDollar(Math.round(ri), [Math.round(noi), Math.round(ri * 1.2), Math.round(ri * 0.8)]).correct,
+              choices: q4s2mc.choices,
+              correct: q4s2mc.correct,
               exp: fmt(noi) + " − " + fmt(minReturn * assets) + " = " + fmt(ri),
               result: "Residual income = " + fmt(ri),
               formula: "RI = NOI − (Min Rate × Assets)",
@@ -159,20 +196,8 @@ window.CH10 = {
           title: "Q8 — Effect of Reducing Assets on ROI",
           steps: [{
             inst: "If operating assets decrease by 20% while NOI stays at " + fmt(noi) + ", what is the new ROI?",
-            choices: (function() {
-              var na = Math.round(assets*0.80); var nr = noi/na;
-              var pool = [nr, roi, nr*0.8, roi*1.3].map(function(v){return Math.round(v*1000)/1000;}).filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
-              while(pool.length<4) pool.push(Math.round(nr*(1+pool.length*0.12)*1000)/1000);
-              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-              return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmtP(v);}),correct:s.map(function(v){return Math.round(v*1000);}).indexOf(Math.round(nr*1000))};
-            })().choices,
-            correct: (function() {
-              var na = Math.round(assets*0.80); var nr = noi/na;
-              var pool = [nr, roi, nr*0.8, roi*1.3].map(function(v){return Math.round(v*1000)/1000;}).filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
-              while(pool.length<4) pool.push(Math.round(nr*(1+pool.length*0.12)*1000)/1000);
-              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-              return s.map(function(v){return Math.round(v*1000);}).indexOf(Math.round(nr*1000));
-            })(),
+            choices: q8.choices,
+            correct: q8.correct,
             exp: fmt(noi) + " ÷ " + fmt(Math.round(assets*0.80)) + " = " + fmtP(noi/Math.round(assets*0.80)) + ". Smaller asset base → higher ROI.",
             result: "New ROI = " + fmtP(noi/Math.round(assets*0.80)),
             formula: "ROI = NOI ÷ Assets. Reducing assets increases ROI.",
@@ -200,20 +225,8 @@ window.CH10 = {
           title: "Q10 — New Investment: RI Method Decision",
           steps: [{
             inst: "The same project earns " + fmtP(roi*0.85) + " ROI on " + fmt(Math.round(assets*0.15)) + " assets. Minimum required return is " + fmtP(minReturn) + ". What is the project's residual income?",
-            choices: (function() {
-              var pa=Math.round(assets*0.15); var pn=Math.round(pa*roi*0.85); var pr=pn-Math.round(minReturn*pa);
-              var pool=[pr, Math.round(pn), Math.round(minReturn*pa), pr-2000].filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,4);
-              while(pool.length<4) pool.push(pr+pool.length*1000);
-              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-              return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.map(Math.round).indexOf(Math.round(pr))};
-            })().choices,
-            correct: (function() {
-              var pa=Math.round(assets*0.15); var pn=Math.round(pa*roi*0.85); var pr=pn-Math.round(minReturn*pa);
-              var pool=[pr, Math.round(pn), Math.round(minReturn*pa), pr-2000].filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,4);
-              while(pool.length<4) pool.push(pr+pool.length*1000);
-              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-              return s.map(Math.round).indexOf(Math.round(pr));
-            })(),
+            choices: q10.choices,
+            correct: q10.correct,
             exp: (function(){var pa=Math.round(assets*0.15);var pn=Math.round(pa*roi*0.85);var pr=pn-Math.round(minReturn*pa);return fmt(pn)+" − "+fmt(Math.round(minReturn*pa))+" = "+fmt(pr)+". "+(pr>0?"Positive → accept under RI method.":"Negative → reject.");})(),
             result: (function(){var pa=Math.round(assets*0.15);var pn=Math.round(pa*roi*0.85);return "Project RI = "+fmt(pn-Math.round(minReturn*pa));})(),
             formula: "Project RI = Project NOI − (Min Rate × Project Assets)",
@@ -241,8 +254,8 @@ window.CH10 = {
           title: "Q12 — Compute Missing: NOI from ROI",
           steps: [{
             inst: "A division has ROI of " + fmtP(roi) + " and average operating assets of " + fmt(assets) + ". What is net operating income?",
-            choices: mcDollar(noi, [Math.round(noi*1.2), Math.round(noi*0.8), Math.round(assets*minReturn)]).choices,
-            correct: mcDollar(noi, [Math.round(noi*1.2), Math.round(noi*0.8), Math.round(assets*minReturn)]).correct,
+            choices: q12mc.choices,
+            correct: q12mc.correct,
             exp: fmtP(roi) + " × " + fmt(assets) + " = " + fmt(noi),
             result: "NOI = " + fmt(noi),
             formula: "NOI = ROI × Average Operating Assets",
@@ -252,21 +265,21 @@ window.CH10 = {
         {
           title: "Q13 — Compute Missing: Assets from Turnover",
           steps: [{
-            inst: "A division has sales of " + fmt(sales) + " and asset turnover of " + fmtP(turnover) + ". What are average operating assets?",
-            choices: mcDollar(assets, [Math.round(assets*1.25), Math.round(assets*0.75), Math.round(sales*turnover)]).choices,
-            correct: mcDollar(assets, [Math.round(assets*1.25), Math.round(assets*0.75), Math.round(sales*turnover)]).correct,
-            exp: fmt(sales) + " ÷ " + fmtP(turnover) + " = " + fmt(assets),
+            inst: "A division has sales of " + fmt(sales) + " and asset turnover of " + fmtTurnover(turnover) + ". What are average operating assets?",
+            choices: q13mc.choices,
+            correct: q13mc.correct,
+            exp: fmt(sales) + " ÷ " + fmtTurnover(turnover) + " = " + fmt(assets),
             result: "Assets = " + fmt(assets),
             formula: "Assets = Sales ÷ Turnover",
-            numbers: "Sales = " + fmt(sales) + ", Turnover = " + fmtP(turnover)
+            numbers: "Sales = " + fmt(sales) + ", Turnover = " + fmtTurnover(turnover)
           }]
         },
         {
           title: "Q14 — Compute Missing: Sales from Margin and NOI",
           steps: [{
             inst: "A division has NOI of " + fmt(noi) + " and profit margin of " + fmtP(margin) + ". What are total sales?",
-            choices: mcDollar(sales, [Math.round(sales*1.2), Math.round(sales*0.8), Math.round(noi/roi)]).choices,
-            correct: mcDollar(sales, [Math.round(sales*1.2), Math.round(sales*0.8), Math.round(noi/roi)]).correct,
+            choices: q14mc.choices,
+            correct: q14mc.correct,
             exp: fmt(noi) + " ÷ " + fmtP(margin) + " = " + fmt(sales),
             result: "Sales = " + fmt(sales),
             formula: "Sales = NOI ÷ Margin",

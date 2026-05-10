@@ -13,7 +13,7 @@ window.CH1 = {
     var questions = [
       {
         title: "Q1 — Period vs Product Cost",
-        steps: [{ inst: "Which of the following is a period cost?", choices: ["A. Direct materials", "B. Manufacturing overhead", "C. Sales commissions", "D. Direct labor"], correct: 2, exp: "Sales commissions are a selling expense — a period cost expensed in the period incurred. DM, DL, and MOH are all product costs.", result: "C. Sales commissions", formula: "Period costs = Selling & Admin expenses | Product costs = DM + DL + MOH", numbers: "N/A — conceptual" }]
+        steps: [{ inst: "Which of the following is a period cost?", choices: ["A. Factory utilities", "B. Sales commissions", "C. Factory supervisor salary", "D. Depreciation on factory equipment"], correct: 1, exp: "Sales commissions are a selling expense — period costs are expensed immediately and never touch inventory. Factory utilities, factory supervisor salary, and depreciation on factory equipment are all indirect manufacturing costs (part of MOH) — they get attached to inventory as product costs.", result: "B. Sales commissions", formula: "Period costs = Selling & Admin expenses | Product costs = DM + DL + MOH", numbers: "N/A — conceptual" }]
       },
       {
         title: "Q2 — Variable Cost Behavior",

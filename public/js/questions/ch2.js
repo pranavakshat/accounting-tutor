@@ -104,6 +104,27 @@ window.CH2 = {
       return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtD(v) + ' per MH'; }), correct: idx };
     }
 
+    // Precompute all mc() results to avoid double-call shuffle bug
+    var q1mc  = mcRate(pohr_plant, [pohr_plant * 1.1, pohr_plant * 0.9, varRatePlant]);
+    var q2mc  = mc(oh_P_plant, [oh_Q_plant, oh_P_plant * 1.1, dm_P]);
+    var q3mc  = mc(oh_Q_plant, [oh_P_plant, oh_Q_plant * 1.1, dm_Q]);
+    var q4mc  = mc(total_P_plant, [dm_P + dl_P, total_Q_plant, total_P_plant * 1.05]);
+    var q5mc  = mc(unit_P_plant, [unit_Q_plant, Math.round(total_P_plant / (units_P + 5)), unit_P_plant * 1.1]);
+    var q6mc  = mc(total_Q_plant, [dm_Q + dl_Q, total_P_plant, total_Q_plant * 1.05]);
+    var q7mc  = mc(unit_Q_plant, [unit_P_plant, Math.round(total_Q_plant / (units_Q + 5)), unit_Q_plant * 1.1]);
+    var q8mc  = mc(cogs_plant, [total_P_plant, total_Q_plant, cogs_plant * 1.08]);
+    var q9mc  = mcRate(pohr_mold, [pohr_plant, pohr_fab, varRateMold]);
+    var q10mc = mcRate(pohr_fab, [pohr_plant, pohr_mold, varRateFab]);
+    var q11s1mc = mc(ohMold_P, [ohMold_Q, ohFab_P, ohMold_P * 1.1]);
+    var q11s2mc = mc(ohMold_Q, [ohMold_P, ohFab_Q, ohMold_Q * 1.1]);
+    var q12s1mc = mc(ohFab_P, [ohFab_Q, ohMold_P, ohFab_P * 1.1]);
+    var q12s2mc = mc(ohFab_Q, [ohFab_P, ohMold_Q, ohFab_Q * 1.1]);
+    var q13s1mc = mc(oh_P_dept, [oh_P_plant, oh_Q_dept, oh_P_dept * 1.05]);
+    var q13s2mc = mc(unit_P_dept, [unit_P_plant, unit_Q_dept, unit_P_dept * 1.1]);
+    var q14s1mc = mc(oh_Q_dept, [oh_Q_plant, oh_P_dept, oh_Q_dept * 1.05]);
+    var q14s2mc = mc(unit_Q_dept, [unit_Q_plant, unit_P_dept, unit_Q_dept * 1.1]);
+    var q15mc = mc(cogs_dept, [cogs_plant, total_P_dept, cogs_dept * 1.05]);
+
     return {
       data: {
         totalMH: totalMH, moldMH_total: moldMH_total, fabMH_total: fabMH_total,
@@ -136,8 +157,8 @@ window.CH2 = {
           title: "Q1 — Plantwide Predetermined Overhead Rate",
           steps: [{
             inst: "Total fixed overhead is " + fmt(totalFixed) + ", the variable overhead rate is " + fmtD(varRatePlant) + "/MH, and estimated total machine hours are " + totalMH.toLocaleString() + " MH. What is the plantwide predetermined overhead rate (POHR)?",
-            choices: mcRate(pohr_plant, [pohr_plant * 1.1, pohr_plant * 0.9, varRatePlant]).choices,
-            correct: mcRate(pohr_plant, [pohr_plant * 1.1, pohr_plant * 0.9, varRatePlant]).correct,
+            choices: q1mc.choices,
+            correct: q1mc.correct,
             exp: "(" + fmt(totalFixed) + " + " + fmtD(varRatePlant) + " × " + totalMH.toLocaleString() + ") ÷ " + totalMH.toLocaleString() + " MH = " + fmtD(pohr_plant) + " per MH",
             result: "Plantwide POHR = " + fmtD(pohr_plant) + "/MH",
             formula: "Plantwide POHR = (Total Fixed OH + Variable Rate × Total MH) / Total MH",
@@ -148,8 +169,8 @@ window.CH2 = {
           title: "Q2 — Overhead Applied to Job P (Plantwide)",
           steps: [{
             inst: "Job P used " + mhTotal_P.toLocaleString() + " total machine hours. The plantwide POHR is " + fmtD(pohr_plant) + "/MH. How much overhead is applied to Job P?",
-            choices: mc(oh_P_plant, [oh_Q_plant, oh_P_plant * 1.1, dm_P]).choices,
-            correct: mc(oh_P_plant, [oh_Q_plant, oh_P_plant * 1.1, dm_P]).correct,
+            choices: q2mc.choices,
+            correct: q2mc.correct,
             exp: mhTotal_P.toLocaleString() + " MH × " + fmtD(pohr_plant) + " = " + fmt(oh_P_plant),
             result: "OH applied to Job P (plantwide) = " + fmt(oh_P_plant),
             formula: "OH Applied = Job MH × POHR",
@@ -160,8 +181,8 @@ window.CH2 = {
           title: "Q3 — Overhead Applied to Job Q (Plantwide)",
           steps: [{
             inst: "Job Q used " + mhTotal_Q.toLocaleString() + " total machine hours. The plantwide POHR is " + fmtD(pohr_plant) + "/MH. How much overhead is applied to Job Q?",
-            choices: mc(oh_Q_plant, [oh_P_plant, oh_Q_plant * 1.1, dm_Q]).choices,
-            correct: mc(oh_Q_plant, [oh_P_plant, oh_Q_plant * 1.1, dm_Q]).correct,
+            choices: q3mc.choices,
+            correct: q3mc.correct,
             exp: mhTotal_Q.toLocaleString() + " MH × " + fmtD(pohr_plant) + " = " + fmt(oh_Q_plant),
             result: "OH applied to Job Q (plantwide) = " + fmt(oh_Q_plant),
             formula: "OH Applied = Job MH × POHR",
@@ -172,8 +193,8 @@ window.CH2 = {
           title: "Q4 — Total Manufacturing Cost: Job P",
           steps: [{
             inst: "Job P has DM " + fmt(dm_P) + ", DL " + fmt(dl_P) + ", and OH applied " + fmt(oh_P_plant) + ". What is the total manufacturing cost for Job P?",
-            choices: mc(total_P_plant, [dm_P + dl_P, total_Q_plant, total_P_plant * 1.05]).choices,
-            correct: mc(total_P_plant, [dm_P + dl_P, total_Q_plant, total_P_plant * 1.05]).correct,
+            choices: q4mc.choices,
+            correct: q4mc.correct,
             exp: fmt(dm_P) + " + " + fmt(dl_P) + " + " + fmt(oh_P_plant) + " = " + fmt(total_P_plant),
             result: "Total mfg cost Job P = " + fmt(total_P_plant),
             formula: "Total Mfg Cost = DM + DL + OH Applied",
@@ -184,8 +205,8 @@ window.CH2 = {
           title: "Q5 — Unit Product Cost: Job P (Plantwide)",
           steps: [{
             inst: "Job P's total manufacturing cost is " + fmt(total_P_plant) + " and " + units_P + " units were produced. What is the unit product cost for Job P?",
-            choices: mc(unit_P_plant, [unit_Q_plant, Math.round(total_P_plant / (units_P + 5)), unit_P_plant * 1.1]).choices,
-            correct: mc(unit_P_plant, [unit_Q_plant, Math.round(total_P_plant / (units_P + 5)), unit_P_plant * 1.1]).correct,
+            choices: q5mc.choices,
+            correct: q5mc.correct,
             exp: fmt(total_P_plant) + " ÷ " + units_P + " units = " + fmt(unit_P_plant) + " per unit",
             result: "Unit cost Job P (plantwide) = " + fmt(unit_P_plant),
             formula: "Unit Product Cost = Total Mfg Cost / Units Produced",
@@ -196,8 +217,8 @@ window.CH2 = {
           title: "Q6 — Total Manufacturing Cost: Job Q",
           steps: [{
             inst: "Job Q has DM " + fmt(dm_Q) + ", DL " + fmt(dl_Q) + ", and OH applied " + fmt(oh_Q_plant) + ". What is the total manufacturing cost for Job Q?",
-            choices: mc(total_Q_plant, [dm_Q + dl_Q, total_P_plant, total_Q_plant * 1.05]).choices,
-            correct: mc(total_Q_plant, [dm_Q + dl_Q, total_P_plant, total_Q_plant * 1.05]).correct,
+            choices: q6mc.choices,
+            correct: q6mc.correct,
             exp: fmt(dm_Q) + " + " + fmt(dl_Q) + " + " + fmt(oh_Q_plant) + " = " + fmt(total_Q_plant),
             result: "Total mfg cost Job Q = " + fmt(total_Q_plant),
             formula: "Total Mfg Cost = DM + DL + OH Applied",
@@ -208,8 +229,8 @@ window.CH2 = {
           title: "Q7 — Unit Product Cost: Job Q (Plantwide)",
           steps: [{
             inst: "Job Q's total manufacturing cost is " + fmt(total_Q_plant) + " and " + units_Q + " units were produced. What is the unit product cost for Job Q?",
-            choices: mc(unit_Q_plant, [unit_P_plant, Math.round(total_Q_plant / (units_Q + 5)), unit_Q_plant * 1.1]).choices,
-            correct: mc(unit_Q_plant, [unit_P_plant, Math.round(total_Q_plant / (units_Q + 5)), unit_Q_plant * 1.1]).correct,
+            choices: q7mc.choices,
+            correct: q7mc.correct,
             exp: fmt(total_Q_plant) + " ÷ " + units_Q + " units = " + fmt(unit_Q_plant) + " per unit",
             result: "Unit cost Job Q (plantwide) = " + fmt(unit_Q_plant),
             formula: "Unit Product Cost = Total Mfg Cost / Units Produced",
@@ -220,8 +241,8 @@ window.CH2 = {
           title: "Q8 — Cost of Goods Sold (Plantwide)",
           steps: [{
             inst: "Both Job P and Job Q were completed and sold. Total mfg cost for Job P is " + fmt(total_P_plant) + " and for Job Q is " + fmt(total_Q_plant) + ". What is the total cost of goods sold?",
-            choices: mc(cogs_plant, [total_P_plant, total_Q_plant, cogs_plant * 1.08]).choices,
-            correct: mc(cogs_plant, [total_P_plant, total_Q_plant, cogs_plant * 1.08]).correct,
+            choices: q8mc.choices,
+            correct: q8mc.correct,
             exp: fmt(total_P_plant) + " + " + fmt(total_Q_plant) + " = " + fmt(cogs_plant),
             result: "COGS (plantwide) = " + fmt(cogs_plant),
             formula: "COGS = Sum of all completed job manufacturing costs",
@@ -232,8 +253,8 @@ window.CH2 = {
           title: "Q9 — Departmental POHR: Molding",
           steps: [{
             inst: "Molding dept has fixed OH of " + fmt(fixedMold) + ", variable rate of " + fmtD(varRateMold) + "/MH, and estimated " + moldMH_total.toLocaleString() + " MH. What is the Molding department POHR?",
-            choices: mcRate(pohr_mold, [pohr_plant, pohr_fab, varRateMold]).choices,
-            correct: mcRate(pohr_mold, [pohr_plant, pohr_fab, varRateMold]).correct,
+            choices: q9mc.choices,
+            correct: q9mc.correct,
             exp: "(" + fmt(fixedMold) + " + " + fmtD(varRateMold) + " × " + moldMH_total.toLocaleString() + ") ÷ " + moldMH_total.toLocaleString() + " = " + fmtD(pohr_mold) + "/MH",
             result: "Molding POHR = " + fmtD(pohr_mold) + "/MH",
             formula: "Dept POHR = (Dept Fixed OH + Dept Var Rate × Dept MH) / Dept MH",
@@ -244,8 +265,8 @@ window.CH2 = {
           title: "Q10 — Departmental POHR: Fabrication",
           steps: [{
             inst: "Fabrication dept has fixed OH of " + fmt(fixedFab) + ", variable rate of " + fmtD(varRateFab) + "/MH, and estimated " + fabMH_total.toLocaleString() + " MH. What is the Fabrication department POHR?",
-            choices: mcRate(pohr_fab, [pohr_plant, pohr_mold, varRateFab]).choices,
-            correct: mcRate(pohr_fab, [pohr_plant, pohr_mold, varRateFab]).correct,
+            choices: q10mc.choices,
+            correct: q10mc.correct,
             exp: "(" + fmt(fixedFab) + " + " + fmtD(varRateFab) + " × " + fabMH_total.toLocaleString() + ") ÷ " + fabMH_total.toLocaleString() + " = " + fmtD(pohr_fab) + "/MH",
             result: "Fabrication POHR = " + fmtD(pohr_fab) + "/MH",
             formula: "Dept POHR = (Dept Fixed OH + Dept Var Rate × Dept MH) / Dept MH",
@@ -257,8 +278,8 @@ window.CH2 = {
           steps: [
             {
               inst: "Job P used " + mhMold_P.toLocaleString() + " MH in Molding. The Molding POHR is " + fmtD(pohr_mold) + "/MH. How much Molding OH is applied to Job P?",
-              choices: mc(ohMold_P, [ohMold_Q, ohFab_P, ohMold_P * 1.1]).choices,
-              correct: mc(ohMold_P, [ohMold_Q, ohFab_P, ohMold_P * 1.1]).correct,
+              choices: q11s1mc.choices,
+              correct: q11s1mc.correct,
               exp: mhMold_P.toLocaleString() + " MH × " + fmtD(pohr_mold) + " = " + fmt(ohMold_P),
               result: "Molding OH → Job P = " + fmt(ohMold_P),
               formula: "OH Applied = Job Dept MH × Dept POHR",
@@ -266,8 +287,8 @@ window.CH2 = {
             },
             {
               inst: "Job Q used " + mhMold_Q.toLocaleString() + " MH in Molding. The Molding POHR is " + fmtD(pohr_mold) + "/MH. How much Molding OH is applied to Job Q?",
-              choices: mc(ohMold_Q, [ohMold_P, ohFab_Q, ohMold_Q * 1.1]).choices,
-              correct: mc(ohMold_Q, [ohMold_P, ohFab_Q, ohMold_Q * 1.1]).correct,
+              choices: q11s2mc.choices,
+              correct: q11s2mc.correct,
               exp: mhMold_Q.toLocaleString() + " MH × " + fmtD(pohr_mold) + " = " + fmt(ohMold_Q),
               result: "Molding OH → Job Q = " + fmt(ohMold_Q),
               formula: "OH Applied = Job Dept MH × Dept POHR",
@@ -280,8 +301,8 @@ window.CH2 = {
           steps: [
             {
               inst: "Job P used " + mhFab_P.toLocaleString() + " MH in Fabrication. The Fabrication POHR is " + fmtD(pohr_fab) + "/MH. How much Fabrication OH is applied to Job P?",
-              choices: mc(ohFab_P, [ohFab_Q, ohMold_P, ohFab_P * 1.1]).choices,
-              correct: mc(ohFab_P, [ohFab_Q, ohMold_P, ohFab_P * 1.1]).correct,
+              choices: q12s1mc.choices,
+              correct: q12s1mc.correct,
               exp: mhFab_P.toLocaleString() + " MH × " + fmtD(pohr_fab) + " = " + fmt(ohFab_P),
               result: "Fabrication OH → Job P = " + fmt(ohFab_P),
               formula: "OH Applied = Job Dept MH × Dept POHR",
@@ -289,8 +310,8 @@ window.CH2 = {
             },
             {
               inst: "Job Q used " + mhFab_Q.toLocaleString() + " MH in Fabrication. The Fabrication POHR is " + fmtD(pohr_fab) + "/MH. How much Fabrication OH is applied to Job Q?",
-              choices: mc(ohFab_Q, [ohFab_P, ohMold_Q, ohFab_Q * 1.1]).choices,
-              correct: mc(ohFab_Q, [ohFab_P, ohMold_Q, ohFab_Q * 1.1]).correct,
+              choices: q12s2mc.choices,
+              correct: q12s2mc.correct,
               exp: mhFab_Q.toLocaleString() + " MH × " + fmtD(pohr_fab) + " = " + fmt(ohFab_Q),
               result: "Fabrication OH → Job Q = " + fmt(ohFab_Q),
               formula: "OH Applied = Job Dept MH × Dept POHR",
@@ -303,8 +324,8 @@ window.CH2 = {
           steps: [
             {
               inst: "Using departmental rates: Job P's total OH is Molding OH " + fmt(ohMold_P) + " + Fabrication OH " + fmt(ohFab_P) + ". What is total OH applied to Job P?",
-              choices: mc(oh_P_dept, [oh_P_plant, oh_Q_dept, oh_P_dept * 1.05]).choices,
-              correct: mc(oh_P_dept, [oh_P_plant, oh_Q_dept, oh_P_dept * 1.05]).correct,
+              choices: q13s1mc.choices,
+              correct: q13s1mc.correct,
               exp: fmt(ohMold_P) + " + " + fmt(ohFab_P) + " = " + fmt(oh_P_dept),
               result: "Total dept OH → Job P = " + fmt(oh_P_dept),
               formula: "Total OH = Molding OH Applied + Fabrication OH Applied",
@@ -312,8 +333,8 @@ window.CH2 = {
             },
             {
               inst: "Job P total manufacturing cost using departmental rates: DM " + fmt(dm_P) + " + DL " + fmt(dl_P) + " + OH " + fmt(oh_P_dept) + ". Divided by " + units_P + " units. What is the unit product cost?",
-              choices: mc(unit_P_dept, [unit_P_plant, unit_Q_dept, unit_P_dept * 1.1]).choices,
-              correct: mc(unit_P_dept, [unit_P_plant, unit_Q_dept, unit_P_dept * 1.1]).correct,
+              choices: q13s2mc.choices,
+              correct: q13s2mc.correct,
               exp: "(" + fmt(dm_P) + " + " + fmt(dl_P) + " + " + fmt(oh_P_dept) + ") ÷ " + units_P + " = " + fmt(total_P_dept) + " ÷ " + units_P + " = " + fmt(unit_P_dept) + " per unit",
               result: "Unit cost Job P (dept rates) = " + fmt(unit_P_dept),
               formula: "Unit Cost = (DM + DL + Total Dept OH) / Units",
@@ -326,8 +347,8 @@ window.CH2 = {
           steps: [
             {
               inst: "Using departmental rates: Job Q's Molding OH is " + fmt(ohMold_Q) + " and Fabrication OH is " + fmt(ohFab_Q) + ". What is total OH applied to Job Q?",
-              choices: mc(oh_Q_dept, [oh_Q_plant, oh_P_dept, oh_Q_dept * 1.05]).choices,
-              correct: mc(oh_Q_dept, [oh_Q_plant, oh_P_dept, oh_Q_dept * 1.05]).correct,
+              choices: q14s1mc.choices,
+              correct: q14s1mc.correct,
               exp: fmt(ohMold_Q) + " + " + fmt(ohFab_Q) + " = " + fmt(oh_Q_dept),
               result: "Total dept OH → Job Q = " + fmt(oh_Q_dept),
               formula: "Total OH = Molding OH Applied + Fabrication OH Applied",
@@ -335,8 +356,8 @@ window.CH2 = {
             },
             {
               inst: "Job Q total manufacturing cost using departmental rates: DM " + fmt(dm_Q) + " + DL " + fmt(dl_Q) + " + OH " + fmt(oh_Q_dept) + ". Divided by " + units_Q + " units. What is the unit product cost?",
-              choices: mc(unit_Q_dept, [unit_Q_plant, unit_P_dept, unit_Q_dept * 1.1]).choices,
-              correct: mc(unit_Q_dept, [unit_Q_plant, unit_P_dept, unit_Q_dept * 1.1]).correct,
+              choices: q14s2mc.choices,
+              correct: q14s2mc.correct,
               exp: "(" + fmt(dm_Q) + " + " + fmt(dl_Q) + " + " + fmt(oh_Q_dept) + ") ÷ " + units_Q + " = " + fmt(total_Q_dept) + " ÷ " + units_Q + " = " + fmt(unit_Q_dept) + " per unit",
               result: "Unit cost Job Q (dept rates) = " + fmt(unit_Q_dept),
               formula: "Unit Cost = (DM + DL + Total Dept OH) / Units",
@@ -348,8 +369,8 @@ window.CH2 = {
           title: "Q15 — COGS Using Departmental Rates",
           steps: [{
             inst: "Both jobs were sold. Using departmental rates, Job P total cost is " + fmt(total_P_dept) + " and Job Q total cost is " + fmt(total_Q_dept) + ". What is total COGS?",
-            choices: mc(cogs_dept, [cogs_plant, total_P_dept, cogs_dept * 1.05]).choices,
-            correct: mc(cogs_dept, [cogs_plant, total_P_dept, cogs_dept * 1.05]).correct,
+            choices: q15mc.choices,
+            correct: q15mc.correct,
             exp: fmt(total_P_dept) + " + " + fmt(total_Q_dept) + " = " + fmt(cogs_dept),
             result: "COGS (departmental rates) = " + fmt(cogs_dept),
             formula: "COGS = Job P total cost + Job Q total cost",

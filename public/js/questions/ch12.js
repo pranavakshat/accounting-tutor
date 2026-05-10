@@ -113,8 +113,17 @@ window.CH12 = {
       var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
       var cR = Math.round(correct * 10);
       var idx = s.findIndex(function(v) { return Math.round(v * 10) === cR; });
-      return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtP(v) + '%'; }), correct: idx };
+      return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtP(v); }), correct: idx };
     }
+
+    // Precompute all mc() results to avoid double-call shuffle bug
+    var q2mc  = mc(annualCF, [noi, depreciation, annualCF + noi]);
+    var q3mc  = mc(pvInflows, [annualCF * years, pvInflows * 1.1, investment]);
+    var q4mc  = mc(npv, [pvInflows, -npv, npv + annualCF]);
+    var q5mc  = mcSmall(pi, [Math.round((investment / pvInflows) * 100) / 100, pi + 0.1, pi - 0.1]);
+    var q7mc  = mcSmall(payback, [years / 2, payback * 1.2, payback * 0.8]);
+    var q13mc = mc(actualNPV, [npv, actualNPV * 1.2, investment - actualPvInflows]);
+    var q14mc = mcSmall(actualPayback, [payback, actualPayback * 1.2, years]);
 
     return {
       data: {
@@ -158,8 +167,8 @@ window.CH12 = {
           title: "Q2 — Annual Net Cash Inflow",
           steps: [{
             inst: "Net operating income = " + fmt(noi) + " per year. Depreciation = " + fmt(depreciation) + " per year. What is the annual net cash inflow?",
-            choices: mc(annualCF, [noi, depreciation, annualCF + noi]).choices,
-            correct: mc(annualCF, [noi, depreciation, annualCF + noi]).correct,
+            choices: q2mc.choices,
+            correct: q2mc.correct,
             exp: fmt(noi) + " + " + fmt(depreciation) + " = " + fmt(annualCF) + " per year",
             result: "Annual net cash inflow = " + fmt(annualCF),
             formula: "Annual Cash Inflow = NOI + Depreciation",
@@ -170,8 +179,8 @@ window.CH12 = {
           title: "Q3 — Present Value of Cash Inflows",
           steps: [{
             inst: "Annual cash inflow = " + fmt(annualCF) + " for " + years + " years at a " + Math.round(discountRate * 100) + "% discount rate. PV annuity factor = " + fmtD(pvFactor) + ". What is the total present value of cash inflows?",
-            choices: mc(pvInflows, [annualCF * years, pvInflows * 1.1, investment]).choices,
-            correct: mc(pvInflows, [annualCF * years, pvInflows * 1.1, investment]).correct,
+            choices: q3mc.choices,
+            correct: q3mc.correct,
             exp: fmt(annualCF) + " × " + fmtD(pvFactor) + " = " + fmt(pvInflows),
             result: "PV of cash inflows = " + fmt(pvInflows),
             formula: "PV of Inflows = Annual Cash Flow × PV Annuity Factor",
@@ -182,8 +191,8 @@ window.CH12 = {
           title: "Q4 — Net Present Value (NPV)",
           steps: [{
             inst: "PV of cash inflows = " + fmt(pvInflows) + ". Initial investment = " + fmt(investment) + ". What is the net present value?",
-            choices: mc(npv, [pvInflows, -npv, npv + annualCF]).choices,
-            correct: mc(npv, [pvInflows, -npv, npv + annualCF]).correct,
+            choices: q4mc.choices,
+            correct: q4mc.correct,
             exp: fmt(pvInflows) + " − " + fmt(investment) + " = " + fmt(npv) + (npv >= 0 ? " — Accept (positive NPV)" : " — Reject (negative NPV)"),
             result: "NPV = " + fmt(npv),
             formula: "NPV = PV of Cash Inflows − Initial Investment",
@@ -194,8 +203,8 @@ window.CH12 = {
           title: "Q5 — Profitability Index",
           steps: [{
             inst: "PV of cash inflows = " + fmt(pvInflows) + ". Initial investment = " + fmt(investment) + ". What is the profitability index?",
-            choices: mcSmall(pi, [Math.round((investment / pvInflows) * 100) / 100, pi + 0.1, pi - 0.1]).choices,
-            correct: mcSmall(pi, [Math.round((investment / pvInflows) * 100) / 100, pi + 0.1, pi - 0.1]).correct,
+            choices: q5mc.choices,
+            correct: q5mc.correct,
             exp: fmt(pvInflows) + " ÷ " + fmt(investment) + " = " + fmtD(pi) + (pi >= 1 ? " — Accept (PI ≥ 1)" : " — Reject (PI < 1)"),
             result: "Profitability Index = " + fmtD(pi),
             formula: "Profitability Index = PV of Cash Inflows / Initial Investment",
@@ -223,8 +232,8 @@ window.CH12 = {
           title: "Q7 — Payback Period",
           steps: [{
             inst: "Initial investment = " + fmt(investment) + ". Annual net cash inflow = " + fmt(annualCF) + ". What is the payback period?",
-            choices: mcSmall(payback, [years / 2, payback * 1.2, payback * 0.8]).choices,
-            correct: mcSmall(payback, [years / 2, payback * 1.2, payback * 0.8]).correct,
+            choices: q7mc.choices,
+            correct: q7mc.correct,
             exp: fmt(investment) + " ÷ " + fmt(annualCF) + " = " + fmtD(payback) + " years",
             result: "Payback period = " + fmtD(payback) + " years",
             formula: "Payback Period = Initial Investment / Annual Net Cash Inflow",
@@ -236,14 +245,14 @@ window.CH12 = {
           steps: [{
             inst: "Annual net operating income = " + fmt(noi) + ". Initial investment = " + fmt(investment) + ". What is the simple rate of return?",
             choices: [
-              "A. " + fmtP(srr) + "%",
-              "B. " + fmtP(Math.round(discountRate * 1000) / 10) + "%",
-              "C. " + fmtP(Math.round((annualCF / investment) * 1000) / 10) + "%",
-              "D. " + fmtP(srr * 0.8) + "%"
+              "A. " + fmtP(srr),
+              "B. " + fmtP(Math.round(discountRate * 1000) / 10),
+              "C. " + fmtP(Math.round((annualCF / investment) * 1000) / 10),
+              "D. " + fmtP(srr * 0.8)
             ],
             correct: 0,
-            exp: fmt(noi) + " ÷ " + fmt(investment) + " = " + fmtP(srr) + "% (compare to hurdle rate of " + Math.round(discountRate * 100) + "%)",
-            result: "Simple rate of return = " + fmtP(srr) + "%",
+            exp: fmt(noi) + " ÷ " + fmt(investment) + " = " + fmtP(srr) + " (compare to hurdle rate of " + Math.round(discountRate * 100) + "%)",
+            result: "Simple rate of return = " + fmtP(srr),
             formula: "Simple Rate of Return = Annual NOI / Initial Investment",
             numbers: "NOI = " + fmt(noi) + ", Investment = " + fmt(investment)
           }]
@@ -320,8 +329,8 @@ window.CH12 = {
           title: "Q13 — Postaudit: Actual NPV",
           steps: [{
             inst: "Postaudit reveals variable expense ratio was actually 45% (not " + Math.round(varExpPct * 100) + "%). Sales remain " + fmt(sales) + ". Actual variable expenses = " + fmt(actualVarExpense) + ". Actual NOI = " + fmt(actualNOI) + ", Actual annual CF = " + fmt(actualAnnualCF) + ". What is the actual NPV?",
-            choices: mc(actualNPV, [npv, actualNPV * 1.2, investment - actualPvInflows]).choices,
-            correct: mc(actualNPV, [npv, actualNPV * 1.2, investment - actualPvInflows]).correct,
+            choices: q13mc.choices,
+            correct: q13mc.correct,
             exp: "Actual CF = " + fmt(actualAnnualCF) + " × " + fmtD(pvFactor) + " = " + fmt(actualPvInflows) + " − " + fmt(investment) + " = " + fmt(actualNPV),
             result: "Actual NPV = " + fmt(actualNPV),
             formula: "Actual NPV = Actual Annual CF × PV Factor − Investment",
@@ -332,8 +341,8 @@ window.CH12 = {
           title: "Q14 — Postaudit: Actual Payback Period",
           steps: [{
             inst: "With 45% variable expenses, actual annual cash inflow = " + fmt(actualAnnualCF) + ". Initial investment = " + fmt(investment) + ". What is the actual payback period?",
-            choices: mcSmall(actualPayback, [payback, actualPayback * 1.2, years]).choices,
-            correct: mcSmall(actualPayback, [payback, actualPayback * 1.2, years]).correct,
+            choices: q14mc.choices,
+            correct: q14mc.correct,
             exp: fmt(investment) + " ÷ " + fmt(actualAnnualCF) + " = " + fmtD(actualPayback) + " years (vs. projected " + fmtD(payback) + " years)",
             result: "Actual payback = " + fmtD(actualPayback) + " years",
             formula: "Payback = Investment / Actual Annual Cash Flow",
@@ -345,14 +354,14 @@ window.CH12 = {
           steps: [{
             inst: "With 45% variable expenses, actual NOI = " + fmt(actualNOI) + ". Investment = " + fmt(investment) + ". What is the actual simple rate of return?",
             choices: [
-              "A. " + fmtP(actualSRR) + "%",
-              "B. " + fmtP(srr) + "%",
-              "C. " + fmtP(actualSRR * 1.2) + "%",
-              "D. " + fmtP(Math.round(discountRate * 1000) / 10) + "%"
+              "A. " + fmtP(actualSRR),
+              "B. " + fmtP(srr),
+              "C. " + fmtP(actualSRR * 1.2),
+              "D. " + fmtP(Math.round(discountRate * 1000) / 10)
             ],
             correct: 0,
-            exp: fmt(actualNOI) + " ÷ " + fmt(investment) + " = " + fmtP(actualSRR) + "% (vs. projected " + fmtP(srr) + "%). " + (actualSRR < discountRate * 100 ? "Below hurdle rate — project underperformed." : "Still meets hurdle rate."),
-            result: "Actual SRR = " + fmtP(actualSRR) + "%",
+            exp: fmt(actualNOI) + " ÷ " + fmt(investment) + " = " + fmtP(actualSRR) + " (vs. projected " + fmtP(srr) + "). " + (actualSRR < discountRate * 100 ? "Below hurdle rate — project underperformed." : "Still meets hurdle rate."),
+            result: "Actual SRR = " + fmtP(actualSRR),
             formula: "SRR = Actual NOI / Initial Investment",
             numbers: "Actual NOI = " + fmt(actualNOI) + ", Investment = " + fmt(investment)
           }]

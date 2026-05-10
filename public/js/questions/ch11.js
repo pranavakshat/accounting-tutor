@@ -22,10 +22,11 @@ window.CH11 = {
     var priceA = 190, priceB = 155;
 
     // Variable costs per unit
-    var dmA = 48, dlA = 34, vmohA = 21, vselA = 26;
-    var dmB = 38, dlB = 28, vmohB = 16, vselB = 19;
-    var varTotalA = dmA + dlA + vmohA + vselA;  // 129
-    var varTotalB = dmB + dlB + vmohB + vselB;  // 101
+    // dmA = 5 lbs × $8/lb = $40; dmB = 3 lbs × $8/lb = $24
+    var dmA = 40, dlA = 34, vmohA = 21, vselA = 26;
+    var dmB = 24, dlB = 28, vmohB = 16, vselB = 19;
+    var varTotalA = dmA + dlA + vmohA + vselA;  // 121
+    var varTotalB = dmB + dlB + vmohB + vselB;  // 87
 
     var cmA = priceA - varTotalA;  // 61
     var cmB = priceB - varTotalB;  // 54
@@ -143,6 +144,24 @@ window.CH11 = {
       return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtD(v) + '/lb'; }), correct: idx };
     }
 
+    // Precompute all mc() results to avoid double-call shuffle bug
+    var q1s1mc = mcDollar(traceFixedA, [traceFixedB, traceFixedA * 1.1, commonFixed]);
+    var q1s2mc = mcDollar(traceFixedB, [traceFixedA, traceFixedB * 1.1, commonFixed]);
+    var q2mc   = mcDollar(commonFixed, [traceFixedA + traceFixedB, commonFixed * 1.1, traceFixedA]);
+    var q3mc   = mc(soFinImpactA, [soFinImpactA * 1.1, -soFinImpactA, (soPriceA - traceFixedA_perUnit - varTotalA) * soUnitsA]);
+    var q4mc   = mc(soFinImpactB, [soFinImpactB * 1.5, -soFinImpactB, soFinImpactA]);
+    var q5s1mc = mcDollar(soLargeOppCost, [cmA * soLargeUnitsA, soLargeOppCost * 1.5, cmA * soUnitsA]);
+    var q5s2mc = mc(soLargeFinImpact, [soFinImpactA, soLargeFinImpact * 1.1, -soLargeFinImpact]);
+    var q6mc   = mc(discBetaFinImpact, [discBetaCM, discBetaTraceFixed, discBetaFinImpact * 1.2]);
+    var q7mc   = mc(discBeta54FinImpact, [discBetaFinImpact, -discBeta54FinImpact, discBeta54FinImpact * 1.2]);
+    var q8mc   = mc(disc_plus_add, [discBetaFinImpact, cmA * addAlphaUnits, disc_plus_add * 1.2]);
+    var q9mc   = mc(makeVsBuy94_impact, [makeVsBuy69_impact, -makeVsBuy94_impact, makeVsBuy94_impact * 1.1]);
+    var q10mc  = mc(makeVsBuy69_impact, [makeVsBuy94_impact, -makeVsBuy69_impact, makeVsBuy69_impact * 1.1]);
+    var q12s1mc = mcRate(cmPerLbA, [cmPerLbB, cmA, cmPerLbA * 1.2]);
+    var q12s2mc = mcRate(cmPerLbB, [cmPerLbA, cmB, cmPerLbB * 1.2]);
+    var q14mc  = mcDollar(optTotalCM, [cmB * normalUnitsB, cmA * normalUnitsA + cmB * normalUnitsB, optTotalCM * 1.1]);
+    var q15mc  = mcRate(maxPricePerLb, [cmPerLbB, rmCostPerLb, maxPricePerLb * 1.2]);
+
     return {
       data: {
         priceA: priceA, priceB: priceB, cmA: cmA, cmB: cmB,
@@ -173,8 +192,8 @@ window.CH11 = {
           steps: [
             {
               inst: "Alpha has a traceable fixed OH of " + fmt(traceFixedA_perUnit) + "/unit and normal volume is " + fmtN(normalUnitsA) + " units. What is total traceable fixed OH for Alpha?",
-              choices: mcDollar(traceFixedA, [traceFixedB, traceFixedA * 1.1, commonFixed]).choices,
-              correct: mcDollar(traceFixedA, [traceFixedB, traceFixedA * 1.1, commonFixed]).correct,
+              choices: q1s1mc.choices,
+              correct: q1s1mc.correct,
               exp: fmt(traceFixedA_perUnit) + " × " + fmtN(normalUnitsA) + " = " + fmt(traceFixedA),
               result: "Alpha traceable fixed costs = " + fmt(traceFixedA),
               formula: "Total Traceable Fixed = Fixed per Unit × Normal Volume",
@@ -182,8 +201,8 @@ window.CH11 = {
             },
             {
               inst: "Beta has traceable fixed OH of " + fmt(traceFixedB_perUnit) + "/unit and normal volume of " + fmtN(normalUnitsB) + " units. What is total traceable fixed OH for Beta?",
-              choices: mcDollar(traceFixedB, [traceFixedA, traceFixedB * 1.1, commonFixed]).choices,
-              correct: mcDollar(traceFixedB, [traceFixedA, traceFixedB * 1.1, commonFixed]).correct,
+              choices: q1s2mc.choices,
+              correct: q1s2mc.correct,
               exp: fmt(traceFixedB_perUnit) + " × " + fmtN(normalUnitsB) + " = " + fmt(traceFixedB),
               result: "Beta traceable fixed costs = " + fmt(traceFixedB),
               formula: "Total Traceable Fixed = Fixed per Unit × Normal Volume",
@@ -195,8 +214,8 @@ window.CH11 = {
           title: "Q2 — Total Common Fixed Expenses",
           steps: [{
             inst: "Common fixed costs are " + fmt(commonFixed_perUnit) + "/unit allocated to all " + fmtN(normalUnitsA + normalUnitsB) + " total units. What are total common fixed expenses?",
-            choices: mcDollar(commonFixed, [traceFixedA + traceFixedB, commonFixed * 1.1, traceFixedA]).choices,
-            correct: mcDollar(commonFixed, [traceFixedA + traceFixedB, commonFixed * 1.1, traceFixedA]).correct,
+            choices: q2mc.choices,
+            correct: q2mc.correct,
             exp: fmt(commonFixed_perUnit) + " × " + fmtN(normalUnitsA + normalUnitsB) + " = " + fmt(commonFixed),
             result: "Common fixed expenses = " + fmt(commonFixed),
             formula: "Common Fixed = Common Fixed per Unit × Total Units",
@@ -207,8 +226,8 @@ window.CH11 = {
           title: "Q3 — Special Order: Alpha (" + fmtN(soUnitsA) + " units at $136)",
           steps: [{
             inst: "A customer offers to buy " + fmtN(soUnitsA) + " Alpha units at " + fmt(soPriceA) + " per unit. Alpha's variable cost is " + fmt(varTotalA) + "/unit. There is idle capacity — no regular sales are displaced. What is the financial impact?",
-            choices: mc(soFinImpactA, [soFinImpactA * 1.1, -soFinImpactA, (soPriceA - traceFixedA_perUnit - varTotalA) * soUnitsA]).choices,
-            correct: mc(soFinImpactA, [soFinImpactA * 1.1, -soFinImpactA, (soPriceA - traceFixedA_perUnit - varTotalA) * soUnitsA]).correct,
+            choices: q3mc.choices,
+            correct: q3mc.correct,
             exp: "(" + fmt(soPriceA) + " − " + fmt(varTotalA) + ") × " + fmtN(soUnitsA) + " = " + fmt(soFinImpactA) + " advantage",
             result: "Special order Alpha financial advantage = " + fmt(soFinImpactA),
             formula: "Special Order Impact = (Special Price − Variable Cost) × Units",
@@ -219,8 +238,8 @@ window.CH11 = {
           title: "Q4 — Special Order: Beta (" + fmtN(soUnitsB) + " units at $62)",
           steps: [{
             inst: "A customer offers to buy " + fmtN(soUnitsB) + " Beta units at " + fmt(soPriceB) + " per unit. Beta's variable cost is " + fmt(varTotalB) + "/unit. There is idle capacity. What is the financial impact?",
-            choices: mc(soFinImpactB, [soFinImpactB * 1.5, -soFinImpactB, soFinImpactA]).choices,
-            correct: mc(soFinImpactB, [soFinImpactB * 1.5, -soFinImpactB, soFinImpactA]).correct,
+            choices: q4mc.choices,
+            correct: q4mc.correct,
             exp: "(" + fmt(soPriceB) + " − " + fmt(varTotalB) + ") × " + fmtN(soUnitsB) + " = " + fmt(soFinImpactB) + (soFinImpactB >= 0 ? " advantage" : " disadvantage"),
             result: "Special order Beta financial impact = " + fmt(soFinImpactB),
             formula: "Special Order Impact = (Special Price − Variable Cost) × Units",
@@ -232,8 +251,8 @@ window.CH11 = {
           steps: [
             {
               inst: "A large special order wants " + fmtN(soLargeUnitsA) + " Alpha at " + fmt(soPriceA) + ". This displaces " + fmtN(soDisplacedA) + " regular Alpha sales (at " + fmt(priceA) + "). Alpha CM/unit = " + fmt(cmA) + ". What is the opportunity cost (lost CM from displaced sales)?",
-              choices: mcDollar(soLargeOppCost, [cmA * soLargeUnitsA, soLargeOppCost * 1.5, cmA * soUnitsA]).choices,
-              correct: mcDollar(soLargeOppCost, [cmA * soLargeUnitsA, soLargeOppCost * 1.5, cmA * soUnitsA]).correct,
+              choices: q5s1mc.choices,
+              correct: q5s1mc.correct,
               exp: fmt(cmA) + " × " + fmtN(soDisplacedA) + " displaced units = " + fmt(soLargeOppCost) + " opportunity cost",
               result: "Opportunity cost (displaced Alpha) = " + fmt(soLargeOppCost),
               formula: "Opportunity Cost = CM per unit × Units Displaced",
@@ -241,8 +260,8 @@ window.CH11 = {
             },
             {
               inst: "Special order contribution: (" + fmt(soPriceA) + " − " + fmt(varTotalA) + ") × " + fmtN(soLargeUnitsA) + " = " + fmt((soPriceA - varTotalA) * soLargeUnitsA) + ". Minus opportunity cost " + fmt(soLargeOppCost) + ". What is the net financial impact?",
-              choices: mc(soLargeFinImpact, [soFinImpactA, soLargeFinImpact * 1.1, -soLargeFinImpact]).choices,
-              correct: mc(soLargeFinImpact, [soFinImpactA, soLargeFinImpact * 1.1, -soLargeFinImpact]).correct,
+              choices: q5s2mc.choices,
+              correct: q5s2mc.correct,
               exp: fmt((soPriceA - varTotalA) * soLargeUnitsA) + " − " + fmt(soLargeOppCost) + " = " + fmt(soLargeFinImpact) + (soLargeFinImpact < 0 ? " — should REJECT order" : " — should ACCEPT order"),
               result: "Large special order net impact = " + fmt(soLargeFinImpact),
               formula: "Net Impact = Special Order CM − Opportunity Cost",
@@ -254,8 +273,8 @@ window.CH11 = {
           title: "Q6 — Discontinue Beta: Financial Impact",
           steps: [{
             inst: "Beta's total CM = " + fmt(discBetaCM) + ". Traceable fixed costs = " + fmt(discBetaTraceFixed) + " (avoidable if dropped). Common fixed = NOT avoidable. What is the financial impact of discontinuing Beta?",
-            choices: mc(discBetaFinImpact, [discBetaCM, discBetaTraceFixed, discBetaFinImpact * 1.2]).choices,
-            correct: mc(discBetaFinImpact, [discBetaCM, discBetaTraceFixed, discBetaFinImpact * 1.2]).correct,
+            choices: q6mc.choices,
+            correct: q6mc.correct,
             exp: "Saved fixed costs " + fmt(discBetaTraceFixed) + " − Lost CM " + fmt(discBetaCM) + " = " + fmt(discBetaFinImpact) + (discBetaFinImpact < 0 ? " — KEEP Beta (loss from dropping)" : " — DROP Beta (saves money)"),
             result: "Discontinue Beta impact = " + fmt(discBetaFinImpact),
             formula: "Impact = Saved Traceable Fixed − Lost Contribution Margin",
@@ -266,8 +285,8 @@ window.CH11 = {
           title: "Q7 — Discontinue " + fmtN(discBetaUnits54) + " Units of Beta",
           steps: [{
             inst: "If " + fmtN(discBetaUnits54) + " Beta units are discontinued (partial), traceable fixed saved = " + fmt(traceFixedB_perUnit) + "/unit and CM lost = " + fmt(cmB) + "/unit. What is the financial impact?",
-            choices: mc(discBeta54FinImpact, [discBetaFinImpact, -discBeta54FinImpact, discBeta54FinImpact * 1.2]).choices,
-            correct: mc(discBeta54FinImpact, [discBetaFinImpact, -discBeta54FinImpact, discBeta54FinImpact * 1.2]).correct,
+            choices: q7mc.choices,
+            correct: q7mc.correct,
             exp: "(" + fmt(traceFixedB_perUnit) + " − " + fmt(cmB) + ") × " + fmtN(discBetaUnits54) + " = " + fmt(discBeta54FinImpact) + (discBeta54FinImpact < 0 ? " disadvantage" : " advantage"),
             result: "Discontinue " + fmtN(discBetaUnits54) + " Beta impact = " + fmt(discBeta54FinImpact),
             formula: "Impact = (Traceable Fixed/unit − CM/unit) × Units",
@@ -278,8 +297,8 @@ window.CH11 = {
           title: "Q8 — Discontinue Beta AND Add Alpha Sales",
           steps: [{
             inst: "Drop Beta (impact: " + fmt(discBetaFinImpact) + ") AND increase Alpha by " + fmtN(addAlphaUnits) + " units (CM " + fmt(cmA) + "/unit). What is the combined financial impact?",
-            choices: mc(disc_plus_add, [discBetaFinImpact, cmA * addAlphaUnits, disc_plus_add * 1.2]).choices,
-            correct: mc(disc_plus_add, [discBetaFinImpact, cmA * addAlphaUnits, disc_plus_add * 1.2]).correct,
+            choices: q8mc.choices,
+            correct: q8mc.correct,
             exp: fmt(discBetaFinImpact) + " (drop Beta) + " + fmt(cmA * addAlphaUnits) + " (add Alpha CM) = " + fmt(disc_plus_add),
             result: "Combined impact = " + fmt(disc_plus_add),
             formula: "Combined = Drop Beta Impact + (Added Alpha Units × Alpha CM)",
@@ -290,8 +309,8 @@ window.CH11 = {
           title: "Q9 — Make vs Buy: " + fmtN(buyUnitsA_lose) + " Alpha at $136",
           steps: [{
             inst: "Buy " + fmtN(buyUnitsA_lose) + " Alpha externally at " + fmt(buyPriceA) + "/unit vs. making them (variable cost " + fmt(varTotalA) + " + traceable fixed " + fmt(traceFixedA_perUnit) + " per unit). What is the financial impact of buying?",
-            choices: mc(makeVsBuy94_impact, [makeVsBuy69_impact, -makeVsBuy94_impact, makeVsBuy94_impact * 1.1]).choices,
-            correct: mc(makeVsBuy94_impact, [makeVsBuy69_impact, -makeVsBuy94_impact, makeVsBuy94_impact * 1.1]).correct,
+            choices: q9mc.choices,
+            correct: q9mc.correct,
             exp: "Saved (var + trace fixed): " + fmt(varTotalA + traceFixedA_perUnit) + " × " + fmtN(buyUnitsA_lose) + " = " + fmt(savedVarCosts + savedTraceFixed) + ". Purchase cost: " + fmt(purchaseCost) + ". Net: " + fmt(makeVsBuy94_impact) + (makeVsBuy94_impact > 0 ? " — BUY is better" : " — MAKE is better"),
             result: "Make vs buy (" + fmtN(buyUnitsA_lose) + " units) impact = " + fmt(makeVsBuy94_impact),
             formula: "Buy Impact = Savings (var + avoidable fixed) − Purchase Cost",
@@ -302,8 +321,8 @@ window.CH11 = {
           title: "Q10 — Make vs Buy: " + fmtN(buyUnitsA_win) + " Alpha at $136",
           steps: [{
             inst: "Buy " + fmtN(buyUnitsA_win) + " Alpha at " + fmt(buyPriceA) + "/unit. At this lower volume, traceable fixed costs are NOT avoidable (capacity still needed). Only variable costs " + fmt(varTotalA) + "/unit are saved. What is the financial impact?",
-            choices: mc(makeVsBuy69_impact, [makeVsBuy94_impact, -makeVsBuy69_impact, makeVsBuy69_impact * 1.1]).choices,
-            correct: mc(makeVsBuy69_impact, [makeVsBuy94_impact, -makeVsBuy69_impact, makeVsBuy69_impact * 1.1]).correct,
+            choices: q10mc.choices,
+            correct: q10mc.correct,
             exp: "Saved var cost: " + fmt(varTotalA) + " × " + fmtN(buyUnitsA_win) + " = " + fmt(savedVar69) + ". Purchase cost: " + fmt(purchaseCost69) + ". Net: " + fmt(makeVsBuy69_impact) + (makeVsBuy69_impact > 0 ? " — BUY is better" : " — MAKE is better"),
             result: "Make vs buy (" + fmtN(buyUnitsA_win) + " units) impact = " + fmt(makeVsBuy69_impact),
             formula: "Buy Impact = Variable Savings − Purchase Cost (when fixed costs not avoidable)",
@@ -327,8 +346,8 @@ window.CH11 = {
           steps: [
             {
               inst: "Alpha CM per unit = " + fmt(cmA) + ", uses " + lbsPerA + " lbs/unit. What is Alpha's CM per pound of raw material?",
-              choices: mcRate(cmPerLbA, [cmPerLbB, cmA, cmPerLbA * 1.2]).choices,
-              correct: mcRate(cmPerLbA, [cmPerLbB, cmA, cmPerLbA * 1.2]).correct,
+              choices: q12s1mc.choices,
+              correct: q12s1mc.correct,
               exp: fmt(cmA) + " ÷ " + lbsPerA + " lbs = " + fmtD(cmPerLbA) + "/lb",
               result: "Alpha CM/lb = " + fmtD(cmPerLbA),
               formula: "CM per lb = CM per unit / Lbs per unit",
@@ -336,8 +355,8 @@ window.CH11 = {
             },
             {
               inst: "Beta CM per unit = " + fmt(cmB) + ", uses " + lbsPerB + " lbs/unit. What is Beta's CM per pound of raw material?",
-              choices: mcRate(cmPerLbB, [cmPerLbA, cmB, cmPerLbB * 1.2]).choices,
-              correct: mcRate(cmPerLbB, [cmPerLbA, cmB, cmPerLbB * 1.2]).correct,
+              choices: q12s2mc.choices,
+              correct: q12s2mc.correct,
               exp: fmt(cmB) + " ÷ " + lbsPerB + " lbs = " + fmtD(cmPerLbB) + "/lb",
               result: "Beta CM/lb = " + fmtD(cmPerLbB),
               formula: "CM per lb = CM per unit / Lbs per unit",
@@ -366,8 +385,8 @@ window.CH11 = {
           title: "Q14 — Total CM at Optimal Mix",
           steps: [{
             inst: "Optimal mix: " + fmtN(optUnitsB) + " Beta units (" + fmtN(optUnitsB * lbsPerB) + " lbs) and " + fmtN(optUnitsA) + " Alpha units (" + fmtN(optUnitsA * lbsPerA) + " lbs). Total = " + fmtN(optUnitsB * lbsPerB + optUnitsA * lbsPerA) + " lbs. What is total CM?",
-            choices: mcDollar(optTotalCM, [cmB * normalUnitsB, cmA * normalUnitsA + cmB * normalUnitsB, optTotalCM * 1.1]).choices,
-            correct: mcDollar(optTotalCM, [cmB * normalUnitsB, cmA * normalUnitsA + cmB * normalUnitsB, optTotalCM * 1.1]).correct,
+            choices: q14mc.choices,
+            correct: q14mc.correct,
             exp: "(" + fmtN(optUnitsB) + " × " + fmt(cmB) + ") + (" + fmtN(optUnitsA) + " × " + fmt(cmA) + ") = " + fmt(cmB * optUnitsB) + " + " + fmt(cmA * optUnitsA) + " = " + fmt(optTotalCM),
             result: "Total CM at optimal mix = " + fmt(optTotalCM),
             formula: "Total CM = (Beta units × Beta CM) + (Alpha units × Alpha CM)",
@@ -378,8 +397,8 @@ window.CH11 = {
           title: "Q15 — Maximum Price per Additional Pound of RM",
           steps: [{
             inst: "The optimal plan uses all " + fmtN(totalLbs) + " lbs. The constrained product with the highest CM/lb is Beta at " + fmtD(cmPerLbB) + "/lb. What is the maximum price per additional pound of RM the company would pay?",
-            choices: mcRate(maxPricePerLb, [cmPerLbB, rmCostPerLb, maxPricePerLb * 1.2]).choices,
-            correct: mcRate(maxPricePerLb, [cmPerLbB, rmCostPerLb, maxPricePerLb * 1.2]).correct,
+            choices: q15mc.choices,
+            correct: q15mc.correct,
             exp: "Current cost = " + fmtD(rmCostPerLb) + "/lb. Additional CM gained = " + fmtD(cmPerLbB) + "/lb. Max price = " + fmtD(rmCostPerLb) + " + " + fmtD(cmPerLbB) + " = " + fmtD(maxPricePerLb) + "/lb (breakeven on additional RM).",
             result: "Max price for additional RM = " + fmtD(maxPricePerLb) + "/lb",
             formula: "Max price = Current RM cost + CM per lb of best constrained product",

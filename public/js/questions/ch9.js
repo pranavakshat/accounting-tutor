@@ -73,6 +73,67 @@ window.CH9 = {
       return { choices: s.map(function(v, i) { return letters[i] + '. ' + Math.round(v).toLocaleString(); }), correct: s.indexOf(correct) };
     }
 
+    // Precompute all mc() results to avoid double-call shuffle bug
+    var q1mc = mc(mpv, [mqv, mpv * 2, Math.abs(actualQtyUsed * (actualPrice - stdPrice))]);
+    var q2mc = mcUnits(stdQtyAllowed, [actualQtyUsed, actualQtyPurchased, stdQtyAllowed + 1000]);
+    var q3mc = mc(mqv, [mpv, mqv * 2, Math.abs(actualQtyPurchased - stdQtyAllowed) * stdPrice]);
+    var q4mc = mcUnits(stdHoursAllowed, [actualHours, stdHoursAllowed + unitsProduced, Math.round(stdHoursAllowed * 0.9)]);
+    var q5mc = mc(lrv, [lev, lrv * 2, Math.abs(stdHoursAllowed * (actualRate - stdRate))]);
+    var q6mc = mc(lev, [lrv, lev * 2, Math.abs((actualHours - stdHoursAllowed) * actualRate)]);
+    var q9 = (function() {
+      var actual = Math.round(actualPrice * actualQtyPurchased);
+      var std = Math.round(stdPrice * actualQtyPurchased);
+      var pool = [actual, std, Math.round(actualPrice*actualQtyUsed), Math.round(stdPrice*stdQtyAllowed)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
+      while(pool.length<4) pool.push(actual+pool.length*500);
+      var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+      return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.indexOf(actual)};
+    })();
+    var q10 = (function() {
+      var std = Math.round(stdPrice * stdQtyAllowed);
+      var pool = [std, Math.round(actualPrice*actualQtyUsed), Math.round(stdPrice*actualQtyUsed), Math.round(actualPrice*stdQtyAllowed)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
+      while(pool.length<4) pool.push(std+pool.length*500);
+      var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+      return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.indexOf(std)};
+    })();
+    var q11 = (function() {
+      var actual = Math.round(actualRate * actualHours);
+      var pool = [actual, Math.round(stdRate*actualHours), Math.round(actualRate*stdHoursAllowed), Math.round(stdRate*stdHoursAllowed)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
+      while(pool.length<4) pool.push(actual+pool.length*500);
+      var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+      return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.indexOf(actual)};
+    })();
+    var q12 = (function() {
+      var std = Math.round(stdRate * stdHoursAllowed);
+      var pool = [std, Math.round(actualRate*actualHours), Math.round(stdRate*actualHours), Math.round(actualRate*stdHoursAllowed)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
+      while(pool.length<4) pool.push(std+pool.length*500);
+      var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+      return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.indexOf(std)};
+    })();
+
+    // Q7: Total Materials Variance — only correct answer gets F/U label
+    var q7 = (function() {
+      var total = Math.round(mpv + mqv);
+      var absTotal = Math.abs(total);
+      var fuLabel = total <= 0 ? '(F)' : '(U)';
+      var pool = [absTotal, Math.abs(Math.round(mpv)), Math.abs(Math.round(mqv)), Math.abs(Math.round(mpv-mqv))].filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,4);
+      while(pool.length<4) pool.push(absTotal+pool.length*100);
+      var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+      var correctIdx = s.indexOf(absTotal);
+      return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v)+(i===correctIdx?' '+fuLabel:'');}),correct:correctIdx};
+    })();
+
+    // Q8: Total Labor Variance — only correct answer gets F/U label
+    var q8 = (function() {
+      var total = Math.round(lrv + lev);
+      var absTotal = Math.abs(total);
+      var fuLabel = total <= 0 ? '(F)' : '(U)';
+      var pool = [absTotal, Math.abs(Math.round(lrv)), Math.abs(Math.round(lev)), Math.abs(Math.round(lrv-lev))].filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,4);
+      while(pool.length<4) pool.push(absTotal+pool.length*100);
+      var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+      var correctIdx = s.indexOf(absTotal);
+      return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v)+(i===correctIdx?' '+fuLabel:'');}),correct:correctIdx};
+    })();
+
     return {
       data: { stdPrice: stdPrice, actualPrice: actualPrice, stdQty: stdQty, actualQtyUsed: actualQtyUsed, actualQtyPurchased: actualQtyPurchased, stdQtyAllowed: stdQtyAllowed, stdRate: stdRate, actualRate: actualRate, stdHoursUnit: stdHoursUnit, stdHoursAllowed: stdHoursAllowed, actualHours: actualHours, unitsProduced: unitsProduced },
       dataTable: [
@@ -92,8 +153,8 @@ window.CH9 = {
           title: "Q1 — Materials Price Variance",
           steps: [{
             inst: "What is the materials price variance?",
-            choices: mc(mpv, [mqv, mpv * 2, Math.abs(actualQtyUsed * (actualPrice - stdPrice))]).choices,
-            correct: mc(mpv, [mqv, mpv * 2, Math.abs(actualQtyUsed * (actualPrice - stdPrice))]).correct,
+            choices: q1mc.choices,
+            correct: q1mc.correct,
             exp: "(" + fmt(actualPrice) + " − " + fmt(stdPrice) + ") × " + actualQtyPurchased.toLocaleString() + " lbs purchased = " + fmt(Math.round(mpv)) + " " + fav(mpv),
             result: "MPV = " + fmt(Math.round(mpv)) + " " + fav(mpv),
             formula: "MPV = (Actual Price − Standard Price) × Actual Quantity Purchased",
@@ -104,8 +165,8 @@ window.CH9 = {
           title: "Q2 — Standard Quantity Allowed",
           steps: [{
             inst: "How many pounds of material should have been used for actual production?",
-            choices: mcUnits(stdQtyAllowed, [actualQtyUsed, actualQtyPurchased, stdQtyAllowed + 1000]).choices,
-            correct: mcUnits(stdQtyAllowed, [actualQtyUsed, actualQtyPurchased, stdQtyAllowed + 1000]).correct,
+            choices: q2mc.choices,
+            correct: q2mc.correct,
             exp: unitsProduced.toLocaleString() + " units × " + stdQty + " lbs/unit = " + stdQtyAllowed.toLocaleString() + " lbs",
             result: "Std qty allowed = " + stdQtyAllowed.toLocaleString() + " lbs",
             formula: "Standard Qty Allowed = Units Produced × Standard Qty per Unit",
@@ -116,8 +177,8 @@ window.CH9 = {
           title: "Q3 — Materials Quantity Variance",
           steps: [{
             inst: "What is the materials quantity variance?",
-            choices: mc(mqv, [mpv, mqv * 2, Math.abs(actualQtyPurchased - stdQtyAllowed) * stdPrice]).choices,
-            correct: mc(mqv, [mpv, mqv * 2, Math.abs(actualQtyPurchased - stdQtyAllowed) * stdPrice]).correct,
+            choices: q3mc.choices,
+            correct: q3mc.correct,
             exp: "(" + actualQtyUsed.toLocaleString() + " − " + stdQtyAllowed.toLocaleString() + ") × $" + stdPrice + "/lb = " + fmt(Math.round(mqv)) + " " + fav(mqv),
             result: "MQV = " + fmt(Math.round(mqv)) + " " + fav(mqv),
             formula: "MQV = (Actual Qty Used − Std Qty Allowed) × Standard Price",
@@ -128,8 +189,8 @@ window.CH9 = {
           title: "Q4 — Standard Hours Allowed",
           steps: [{
             inst: "How many direct labor hours should have been worked for actual production?",
-            choices: mcUnits(stdHoursAllowed, [actualHours, stdHoursAllowed + unitsProduced, Math.round(stdHoursAllowed * 0.9)]).choices,
-            correct: mcUnits(stdHoursAllowed, [actualHours, stdHoursAllowed + unitsProduced, Math.round(stdHoursAllowed * 0.9)]).correct,
+            choices: q4mc.choices,
+            correct: q4mc.correct,
             exp: unitsProduced.toLocaleString() + " units × " + stdHoursUnit + " hr/unit = " + stdHoursAllowed.toLocaleString() + " hrs",
             result: "Std hrs allowed = " + stdHoursAllowed.toLocaleString() + " hrs",
             formula: "Standard Hours Allowed = Units Produced × Standard Hours per Unit",
@@ -140,8 +201,8 @@ window.CH9 = {
           title: "Q5 — Labor Rate Variance",
           steps: [{
             inst: "What is the labor rate variance?",
-            choices: mc(lrv, [lev, lrv * 2, Math.abs(stdHoursAllowed * (actualRate - stdRate))]).choices,
-            correct: mc(lrv, [lev, lrv * 2, Math.abs(stdHoursAllowed * (actualRate - stdRate))]).correct,
+            choices: q5mc.choices,
+            correct: q5mc.correct,
             exp: "(" + fmt(actualRate) + " − " + fmt(stdRate) + ") × " + actualHours.toLocaleString() + " actual hrs = " + fmt(Math.round(lrv)) + " " + fav(lrv),
             result: "LRV = " + fmt(Math.round(lrv)) + " " + fav(lrv),
             formula: "LRV = (Actual Rate − Standard Rate) × Actual Hours Worked",
@@ -152,8 +213,8 @@ window.CH9 = {
           title: "Q6 — Labor Efficiency Variance",
           steps: [{
             inst: "What is the labor efficiency variance?",
-            choices: mc(lev, [lrv, lev * 2, Math.abs((actualHours - stdHoursAllowed) * actualRate)]).choices,
-            correct: mc(lev, [lrv, lev * 2, Math.abs((actualHours - stdHoursAllowed) * actualRate)]).correct,
+            choices: q6mc.choices,
+            correct: q6mc.correct,
             exp: "(" + actualHours.toLocaleString() + " − " + stdHoursAllowed.toLocaleString() + ") × $" + stdRate + "/hr = " + fmt(Math.round(lev)) + " " + fav(lev),
             result: "LEV = " + fmt(Math.round(lev)) + " " + fav(lev),
             formula: "LEV = (Actual Hours − Standard Hours Allowed) × Standard Rate",
@@ -164,22 +225,8 @@ window.CH9 = {
           title: "Q7 — Total Materials Variance",
           steps: [{
             inst: "Materials price variance is " + fmt(Math.round(mpv)) + " " + fav(mpv) + " and materials quantity variance is " + fmt(Math.round(mqv)) + " " + fav(mqv) + ". What is the total materials variance?",
-            choices: (function() {
-              var total = Math.round(mpv + mqv);
-              var absTotal = Math.abs(total);
-              var pool = [absTotal, Math.abs(Math.round(mpv)), Math.abs(Math.round(mqv)), Math.abs(Math.round(mpv-mqv))].filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,4);
-              while(pool.length<4) pool.push(absTotal+pool.length*100);
-              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-              return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v)+' '+(total<=0?'(F)':'(U)');}),correct:s.indexOf(absTotal)};
-            })().choices,
-            correct: (function() {
-              var total = Math.round(mpv + mqv);
-              var absTotal = Math.abs(total);
-              var pool = [absTotal, Math.abs(Math.round(mpv)), Math.abs(Math.round(mqv)), Math.abs(Math.round(mpv-mqv))].filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,4);
-              while(pool.length<4) pool.push(absTotal+pool.length*100);
-              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-              return s.indexOf(absTotal);
-            })(),
+            choices: q7.choices,
+            correct: q7.correct,
             exp: "Total Materials Variance = MPV + MQV = " + fmt(Math.abs(Math.round(mpv))) + " " + fav(mpv) + " + " + fmt(Math.abs(Math.round(mqv))) + " " + fav(mqv) + " = " + fmt(Math.abs(Math.round(mpv+mqv))) + " " + (Math.round(mpv+mqv)<=0?'(F)':'(U)'),
             result: "Total Materials Variance = " + fmt(Math.abs(Math.round(mpv+mqv))) + " " + (Math.round(mpv+mqv)<=0?'(F)':'(U)'),
             formula: "Total Materials Variance = MPV + MQV",
@@ -190,22 +237,8 @@ window.CH9 = {
           title: "Q8 — Total Labor Variance",
           steps: [{
             inst: "Labor rate variance is " + fmt(Math.round(lrv)) + " " + fav(lrv) + " and labor efficiency variance is " + fmt(Math.round(lev)) + " " + fav(lev) + ". What is the total labor variance?",
-            choices: (function() {
-              var total = Math.round(lrv + lev);
-              var absTotal = Math.abs(total);
-              var pool = [absTotal, Math.abs(Math.round(lrv)), Math.abs(Math.round(lev)), Math.abs(Math.round(lrv-lev))].filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,4);
-              while(pool.length<4) pool.push(absTotal+pool.length*100);
-              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-              return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v)+' '+(total<=0?'(F)':'(U)');}),correct:s.indexOf(absTotal)};
-            })().choices,
-            correct: (function() {
-              var total = Math.round(lrv + lev);
-              var absTotal = Math.abs(total);
-              var pool = [absTotal, Math.abs(Math.round(lrv)), Math.abs(Math.round(lev)), Math.abs(Math.round(lrv-lev))].filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,4);
-              while(pool.length<4) pool.push(absTotal+pool.length*100);
-              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-              return s.indexOf(absTotal);
-            })(),
+            choices: q8.choices,
+            correct: q8.correct,
             exp: "Total Labor Variance = LRV + LEV = " + fmt(Math.abs(Math.round(lrv))) + " " + fav(lrv) + " + " + fmt(Math.abs(Math.round(lev))) + " " + fav(lev) + " = " + fmt(Math.abs(Math.round(lrv+lev))) + " " + (Math.round(lrv+lev)<=0?'(F)':'(U)'),
             result: "Total Labor Variance = " + fmt(Math.abs(Math.round(lrv+lev))) + " " + (Math.round(lrv+lev)<=0?'(F)':'(U)'),
             formula: "Total Labor Variance = LRV + LEV",
@@ -216,22 +249,8 @@ window.CH9 = {
           title: "Q9 — Actual Materials Cost",
           steps: [{
             inst: "Actual price is " + fmt(actualPrice) + "/lb and actual quantity purchased is " + actualQtyPurchased.toLocaleString() + " lbs. What was the actual materials cost?",
-            choices: (function() {
-              var actual = Math.round(actualPrice * actualQtyPurchased);
-              var std = Math.round(stdPrice * actualQtyPurchased);
-              var pool = [actual, std, Math.round(actualPrice*actualQtyUsed), Math.round(stdPrice*stdQtyAllowed)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
-              while(pool.length<4) pool.push(actual+pool.length*500);
-              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-              return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.indexOf(actual)};
-            })().choices,
-            correct: (function() {
-              var actual = Math.round(actualPrice * actualQtyPurchased);
-              var std = Math.round(stdPrice * actualQtyPurchased);
-              var pool = [actual, std, Math.round(actualPrice*actualQtyUsed), Math.round(stdPrice*stdQtyAllowed)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
-              while(pool.length<4) pool.push(actual+pool.length*500);
-              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-              return s.indexOf(actual);
-            })(),
+            choices: q9.choices,
+            correct: q9.correct,
             exp: fmt(actualPrice) + " × " + actualQtyPurchased.toLocaleString() + " = " + fmt(Math.round(actualPrice*actualQtyPurchased)),
             result: "Actual materials cost = " + fmt(Math.round(actualPrice*actualQtyPurchased)),
             formula: "Actual Cost = Actual Price × Actual Quantity Purchased",
@@ -242,20 +261,8 @@ window.CH9 = {
           title: "Q10 — Standard Materials Cost Allowed",
           steps: [{
             inst: "Standard price is " + fmt(stdPrice) + "/lb and standard quantity allowed is " + stdQtyAllowed.toLocaleString() + " lbs. What is the standard cost allowed for actual production?",
-            choices: (function() {
-              var std = Math.round(stdPrice * stdQtyAllowed);
-              var pool = [std, Math.round(actualPrice*actualQtyUsed), Math.round(stdPrice*actualQtyUsed), Math.round(actualPrice*stdQtyAllowed)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
-              while(pool.length<4) pool.push(std+pool.length*500);
-              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-              return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.indexOf(std)};
-            })().choices,
-            correct: (function() {
-              var std = Math.round(stdPrice * stdQtyAllowed);
-              var pool = [std, Math.round(actualPrice*actualQtyUsed), Math.round(stdPrice*actualQtyUsed), Math.round(actualPrice*stdQtyAllowed)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
-              while(pool.length<4) pool.push(std+pool.length*500);
-              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-              return s.indexOf(std);
-            })(),
+            choices: q10.choices,
+            correct: q10.correct,
             exp: fmt(stdPrice) + " × " + stdQtyAllowed.toLocaleString() + " = " + fmt(Math.round(stdPrice*stdQtyAllowed)),
             result: "Standard cost allowed = " + fmt(Math.round(stdPrice*stdQtyAllowed)),
             formula: "Standard Cost Allowed = Standard Price × Standard Qty Allowed",
@@ -266,20 +273,8 @@ window.CH9 = {
           title: "Q11 — Actual Labor Cost",
           steps: [{
             inst: "Actual labor rate is " + fmt(actualRate) + "/hr and " + actualHours.toLocaleString() + " hours were worked. What was the actual labor cost?",
-            choices: (function() {
-              var actual = Math.round(actualRate * actualHours);
-              var pool = [actual, Math.round(stdRate*actualHours), Math.round(actualRate*stdHoursAllowed), Math.round(stdRate*stdHoursAllowed)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
-              while(pool.length<4) pool.push(actual+pool.length*500);
-              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-              return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.indexOf(actual)};
-            })().choices,
-            correct: (function() {
-              var actual = Math.round(actualRate * actualHours);
-              var pool = [actual, Math.round(stdRate*actualHours), Math.round(actualRate*stdHoursAllowed), Math.round(stdRate*stdHoursAllowed)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
-              while(pool.length<4) pool.push(actual+pool.length*500);
-              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-              return s.indexOf(actual);
-            })(),
+            choices: q11.choices,
+            correct: q11.correct,
             exp: fmt(actualRate) + " × " + actualHours.toLocaleString() + " = " + fmt(Math.round(actualRate*actualHours)),
             result: "Actual labor cost = " + fmt(Math.round(actualRate*actualHours)),
             formula: "Actual Labor Cost = Actual Rate × Actual Hours",
@@ -290,20 +285,8 @@ window.CH9 = {
           title: "Q12 — Standard Labor Cost Allowed",
           steps: [{
             inst: "Standard rate is " + fmt(stdRate) + "/hr and standard hours allowed is " + stdHoursAllowed.toLocaleString() + " hrs. What is the standard labor cost for actual production?",
-            choices: (function() {
-              var std = Math.round(stdRate * stdHoursAllowed);
-              var pool = [std, Math.round(actualRate*actualHours), Math.round(stdRate*actualHours), Math.round(actualRate*stdHoursAllowed)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
-              while(pool.length<4) pool.push(std+pool.length*500);
-              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-              return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.indexOf(std)};
-            })().choices,
-            correct: (function() {
-              var std = Math.round(stdRate * stdHoursAllowed);
-              var pool = [std, Math.round(actualRate*actualHours), Math.round(stdRate*actualHours), Math.round(actualRate*stdHoursAllowed)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
-              while(pool.length<4) pool.push(std+pool.length*500);
-              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-              return s.indexOf(std);
-            })(),
+            choices: q12.choices,
+            correct: q12.correct,
             exp: fmt(stdRate) + " × " + stdHoursAllowed.toLocaleString() + " = " + fmt(Math.round(stdRate*stdHoursAllowed)),
             result: "Standard labor cost allowed = " + fmt(Math.round(stdRate*stdHoursAllowed)),
             formula: "Standard Labor Cost = Standard Rate × Standard Hours Allowed",

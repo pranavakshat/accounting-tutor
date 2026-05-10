@@ -45,6 +45,51 @@ window.CH7 = {
       return { choices: s.map(function(v, i) { return letters[i] + '. ' + fmt(v); }), correct: s.indexOf(correct) };
     }
 
+    // Precompute all mc() results to avoid double-call shuffle bug
+    var q1mc = mc(varUnitCost, [dm + dl, absUnitCost, dm + vmoh]);
+    var q2mc = mc(fmohPerUnit, [fmohPerUnit + 2, fmohPerUnit - 2, Math.round(fixedMOH / sold)]);
+    var q3mc = mc(absUnitCost, [varUnitCost, absUnitCost + fmohPerUnit, absUnitCost - vmoh]);
+    var q4 = (function() {
+      var pool = [unsold, produced, sold, unsold + 1000].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
+      while (pool.length < 4) pool.push(unsold + pool.length * 500);
+      var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
+      var ci = s.indexOf(unsold);
+      return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + v.toLocaleString() + ' units'; }), correct: ci };
+    })();
+    var q5mc = mc(incomeDiff, [fixedMOH, incomeDiff * 2, incomeDiff / 2]);
+    var q7 = (function() {
+      var sp = varUnitCost + fmohPerUnit + 8;
+      var rev = sold * sp;
+      var pool = [rev, produced*sp, rev-fixedMOH, Math.round(rev*0.9)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
+      while(pool.length<4) pool.push(rev+pool.length*10000);
+      var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+      return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.indexOf(rev)};
+    })();
+    var q8mc = mc(sold * varUnitCost, [produced * varUnitCost, sold * absUnitCost, unsold * varUnitCost]);
+    var q9 = (function() {
+      var sp = varUnitCost + fmohPerUnit + 8;
+      var rev = sold * sp;
+      var vcogs = sold * varUnitCost;
+      var tcm = rev - vcogs;
+      var pool = [tcm, rev, vcogs, tcm-fixedMOH].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
+      while(pool.length<4) pool.push(tcm+pool.length*5000);
+      var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+      return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.indexOf(tcm)};
+    })();
+    var q10 = (function() {
+      var cm = sold*(varUnitCost+fmohPerUnit+8)-sold*varUnitCost;
+      var fc = fixedMOH + sold*2;
+      var ni = cm - fc;
+      var pool = [ni, cm, ni+fixedMOH, Math.round(ni*0.7)].filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,4);
+      while(pool.length<4) pool.push(ni+pool.length*5000);
+      var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+      return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.map(Math.round).indexOf(Math.round(ni))};
+    })();
+    var q11mc = mc(sold*absUnitCost, [produced*absUnitCost, sold*varUnitCost, unsold*absUnitCost]);
+    var q12mc = mc(unsold*varUnitCost, [unsold*absUnitCost, produced*varUnitCost, unsold*fmohPerUnit]);
+    var q13mc = mc(unsold*absUnitCost, [unsold*varUnitCost, produced*absUnitCost, unsold*fmohPerUnit]);
+    var q14mc = mc(incomeDiff, [fixedMOH, incomeDiff*2, unsold*varUnitCost]);
+
     return {
       data: { dm: dm, dl: dl, vmoh: vmoh, fixedMOH: fixedMOH, produced: produced, sold: sold },
       dataTable: [
@@ -60,8 +105,8 @@ window.CH7 = {
           title: "Q1 — Unit Product Cost (Variable Costing)",
           steps: [{
             inst: "A company has the costs shown in the data table. What is the unit product cost under variable costing?",
-            choices: mc(varUnitCost, [dm + dl, absUnitCost, dm + vmoh]).choices,
-            correct: mc(varUnitCost, [dm + dl, absUnitCost, dm + vmoh]).correct,
+            choices: q1mc.choices,
+            correct: q1mc.correct,
             exp: fmt(dm) + " + " + fmt(dl) + " + " + fmt(vmoh) + " = " + fmt(varUnitCost) + " per unit. Fixed MOH is excluded.",
             result: "Variable unit cost = " + fmt(varUnitCost),
             formula: "Variable Costing Unit Cost = DM + DL + Variable MOH (exclude fixed MOH)",
@@ -72,8 +117,8 @@ window.CH7 = {
           title: "Q2 — Fixed MOH per Unit",
           steps: [{
             inst: "Total fixed manufacturing overhead is " + fmt(fixedMOH) + " and " + produced.toLocaleString() + " units were produced. What is the fixed MOH per unit?",
-            choices: mc(fmohPerUnit, [fmohPerUnit + 2, fmohPerUnit - 2, Math.round(fixedMOH / sold)]).choices,
-            correct: mc(fmohPerUnit, [fmohPerUnit + 2, fmohPerUnit - 2, Math.round(fixedMOH / sold)]).correct,
+            choices: q2mc.choices,
+            correct: q2mc.correct,
             exp: fmt(fixedMOH) + " ÷ " + produced.toLocaleString() + " = " + fmt(fmohPerUnit) + " per unit",
             result: "Fixed MOH per unit = " + fmt(fmohPerUnit),
             formula: "Fixed MOH per unit = Total Fixed MOH ÷ Units Produced",
@@ -84,8 +129,8 @@ window.CH7 = {
           title: "Q3 — Unit Product Cost (Absorption Costing)",
           steps: [{
             inst: "Variable unit cost is " + fmt(varUnitCost) + " and fixed MOH per unit is " + fmt(fmohPerUnit) + ". What is the unit product cost under absorption costing?",
-            choices: mc(absUnitCost, [varUnitCost, absUnitCost + fmohPerUnit, absUnitCost - vmoh]).choices,
-            correct: mc(absUnitCost, [varUnitCost, absUnitCost + fmohPerUnit, absUnitCost - vmoh]).correct,
+            choices: q3mc.choices,
+            correct: q3mc.correct,
             exp: fmt(varUnitCost) + " + " + fmt(fmohPerUnit) + " = " + fmt(absUnitCost) + " per unit",
             result: "Absorption unit cost = " + fmt(absUnitCost),
             formula: "Absorption Unit Cost = Variable Unit Cost + Fixed MOH per Unit",
@@ -96,19 +141,8 @@ window.CH7 = {
           title: "Q4 — Unsold Units",
           steps: [{
             inst: produced.toLocaleString() + " units were produced and " + sold.toLocaleString() + " units were sold. How many units are unsold?",
-            choices: (function() {
-              var pool = [unsold, produced, sold, unsold + 1000].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
-              while (pool.length < 4) pool.push(unsold + pool.length * 500);
-              var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
-              var ci = s.indexOf(unsold);
-              return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + v.toLocaleString() + ' units'; }), correct: ci };
-            })().choices,
-            correct: (function() {
-              var pool = [unsold, produced, sold, unsold + 1000].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
-              while (pool.length < 4) pool.push(unsold + pool.length * 500);
-              var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
-              return s.indexOf(unsold);
-            })(),
+            choices: q4.choices,
+            correct: q4.correct,
             exp: produced.toLocaleString() + " − " + sold.toLocaleString() + " = " + unsold.toLocaleString() + " units",
             result: "Unsold units = " + unsold.toLocaleString(),
             formula: "Unsold Units = Units Produced − Units Sold",
@@ -119,8 +153,8 @@ window.CH7 = {
           title: "Q5 — Income Difference Between Methods",
           steps: [{
             inst: "There are " + unsold.toLocaleString() + " unsold units and fixed MOH per unit is " + fmt(fmohPerUnit) + ". By how much does absorption costing income exceed variable costing income?",
-            choices: mc(incomeDiff, [fixedMOH, incomeDiff * 2, incomeDiff / 2]).choices,
-            correct: mc(incomeDiff, [fixedMOH, incomeDiff * 2, incomeDiff / 2]).correct,
+            choices: q5mc.choices,
+            correct: q5mc.correct,
             exp: unsold.toLocaleString() + " unsold units × " + fmt(fmohPerUnit) + " fixed MOH per unit = " + fmt(incomeDiff),
             result: "Income difference = " + fmt(incomeDiff),
             formula: "Income Difference = Unsold Units × Fixed MOH per Unit",
@@ -143,22 +177,8 @@ window.CH7 = {
           title: "Q7 — Variable Costing Income Statement: Sales",
           steps: [{
             inst: "The company sells " + sold.toLocaleString() + " units at " + fmt(varUnitCost + fmohPerUnit + 8) + " per unit. What is total sales revenue?",
-            choices: (function() {
-              var sp = varUnitCost + fmohPerUnit + 8;
-              var rev = sold * sp;
-              var pool = [rev, produced*sp, rev-fixedMOH, Math.round(rev*0.9)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
-              while(pool.length<4) pool.push(rev+pool.length*10000);
-              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-              return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.indexOf(rev)};
-            })().choices,
-            correct: (function() {
-              var sp = varUnitCost + fmohPerUnit + 8;
-              var rev = sold * sp;
-              var pool = [rev, produced*sp, rev-fixedMOH, Math.round(rev*0.9)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
-              while(pool.length<4) pool.push(rev+pool.length*10000);
-              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-              return s.indexOf(rev);
-            })(),
+            choices: q7.choices,
+            correct: q7.correct,
             exp: sold.toLocaleString() + " units × " + fmt(varUnitCost+fmohPerUnit+8) + " = " + fmt(sold*(varUnitCost+fmohPerUnit+8)),
             result: "Sales = " + fmt(sold*(varUnitCost+fmohPerUnit+8)),
             formula: "Sales = Units Sold × Selling Price",
@@ -169,8 +189,8 @@ window.CH7 = {
           title: "Q8 — Variable COGS",
           steps: [{
             inst: "Variable unit cost is " + fmt(varUnitCost) + " and " + sold.toLocaleString() + " units were sold. What is variable cost of goods sold?",
-            choices: mc(sold * varUnitCost, [produced * varUnitCost, sold * absUnitCost, unsold * varUnitCost]).choices,
-            correct: mc(sold * varUnitCost, [produced * varUnitCost, sold * absUnitCost, unsold * varUnitCost]).correct,
+            choices: q8mc.choices,
+            correct: q8mc.correct,
             exp: sold.toLocaleString() + " × " + fmt(varUnitCost) + " = " + fmt(sold*varUnitCost),
             result: "Variable COGS = " + fmt(sold*varUnitCost),
             formula: "Variable COGS = Units Sold × Variable Unit Cost",
@@ -181,26 +201,8 @@ window.CH7 = {
           title: "Q9 — Variable Costing: Contribution Margin",
           steps: [{
             inst: "Sales are " + fmt(sold*(varUnitCost+fmohPerUnit+8)) + " and variable COGS is " + fmt(sold*varUnitCost) + ". What is the contribution margin?",
-            choices: (function() {
-              var sp = varUnitCost + fmohPerUnit + 8;
-              var rev = sold * sp;
-              var vcogs = sold * varUnitCost;
-              var tcm = rev - vcogs;
-              var pool = [tcm, rev, vcogs, tcm-fixedMOH].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
-              while(pool.length<4) pool.push(tcm+pool.length*5000);
-              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-              return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.indexOf(tcm)};
-            })().choices,
-            correct: (function() {
-              var sp = varUnitCost + fmohPerUnit + 8;
-              var rev = sold * sp;
-              var vcogs = sold * varUnitCost;
-              var tcm = rev - vcogs;
-              var pool = [tcm, rev, vcogs, tcm-fixedMOH].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
-              while(pool.length<4) pool.push(tcm+pool.length*5000);
-              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-              return s.indexOf(tcm);
-            })(),
+            choices: q9.choices,
+            correct: q9.correct,
             exp: fmt(sold*(varUnitCost+fmohPerUnit+8)) + " − " + fmt(sold*varUnitCost) + " = " + fmt(sold*(varUnitCost+fmohPerUnit+8)-sold*varUnitCost),
             result: "Contribution margin = " + fmt(sold*(varUnitCost+fmohPerUnit+8)-sold*varUnitCost),
             formula: "CM = Sales − Variable Costs",
@@ -211,24 +213,8 @@ window.CH7 = {
           title: "Q10 — Variable Costing Net Income",
           steps: [{
             inst: "Contribution margin is " + fmt(sold*(varUnitCost+fmohPerUnit+8)-sold*varUnitCost) + " and total fixed costs (MOH + selling/admin) are " + fmt(fixedMOH + sold*2) + ". What is net income under variable costing?",
-            choices: (function() {
-              var cm = sold*(varUnitCost+fmohPerUnit+8)-sold*varUnitCost;
-              var fc = fixedMOH + sold*2;
-              var ni = cm - fc;
-              var pool = [ni, cm, ni+fixedMOH, Math.round(ni*0.7)].filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,4);
-              while(pool.length<4) pool.push(ni+pool.length*5000);
-              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-              return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.map(Math.round).indexOf(Math.round(ni))};
-            })().choices,
-            correct: (function() {
-              var cm = sold*(varUnitCost+fmohPerUnit+8)-sold*varUnitCost;
-              var fc = fixedMOH + sold*2;
-              var ni = cm - fc;
-              var pool = [ni, cm, ni+fixedMOH, Math.round(ni*0.7)].filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,4);
-              while(pool.length<4) pool.push(ni+pool.length*5000);
-              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-              return s.map(Math.round).indexOf(Math.round(ni));
-            })(),
+            choices: q10.choices,
+            correct: q10.correct,
             exp: fmt(sold*(varUnitCost+fmohPerUnit+8)-sold*varUnitCost) + " − " + fmt(fixedMOH+sold*2) + " = " + fmt(sold*(varUnitCost+fmohPerUnit+8)-sold*varUnitCost-fixedMOH-sold*2),
             result: "Variable costing NI = " + fmt(sold*(varUnitCost+fmohPerUnit+8)-sold*varUnitCost-fixedMOH-sold*2),
             formula: "Net Income (Variable) = CM − Total Fixed Costs",
@@ -239,8 +225,8 @@ window.CH7 = {
           title: "Q11 — Absorption Costing COGS",
           steps: [{
             inst: "Absorption unit cost is " + fmt(absUnitCost) + " and " + sold.toLocaleString() + " units were sold. What is absorption costing COGS?",
-            choices: mc(sold*absUnitCost, [produced*absUnitCost, sold*varUnitCost, unsold*absUnitCost]).choices,
-            correct: mc(sold*absUnitCost, [produced*absUnitCost, sold*varUnitCost, unsold*absUnitCost]).correct,
+            choices: q11mc.choices,
+            correct: q11mc.correct,
             exp: sold.toLocaleString() + " × " + fmt(absUnitCost) + " = " + fmt(sold*absUnitCost),
             result: "Absorption COGS = " + fmt(sold*absUnitCost),
             formula: "Absorption COGS = Units Sold × Absorption Unit Cost",
@@ -251,8 +237,8 @@ window.CH7 = {
           title: "Q12 — Ending Inventory (Variable Costing)",
           steps: [{
             inst: unsold.toLocaleString() + " units remain in ending inventory. Under variable costing, what is their value?",
-            choices: mc(unsold*varUnitCost, [unsold*absUnitCost, produced*varUnitCost, unsold*fmohPerUnit]).choices,
-            correct: mc(unsold*varUnitCost, [unsold*absUnitCost, produced*varUnitCost, unsold*fmohPerUnit]).correct,
+            choices: q12mc.choices,
+            correct: q12mc.correct,
             exp: unsold.toLocaleString() + " × " + fmt(varUnitCost) + " = " + fmt(unsold*varUnitCost) + ". Fixed MOH is NOT included under variable costing.",
             result: "Ending inventory (variable) = " + fmt(unsold*varUnitCost),
             formula: "Ending Inventory (Variable) = Unsold Units × Variable Unit Cost",
@@ -263,8 +249,8 @@ window.CH7 = {
           title: "Q13 — Ending Inventory (Absorption Costing)",
           steps: [{
             inst: unsold.toLocaleString() + " units remain in ending inventory. Under absorption costing, what is their value?",
-            choices: mc(unsold*absUnitCost, [unsold*varUnitCost, produced*absUnitCost, unsold*fmohPerUnit]).choices,
-            correct: mc(unsold*absUnitCost, [unsold*varUnitCost, produced*absUnitCost, unsold*fmohPerUnit]).correct,
+            choices: q13mc.choices,
+            correct: q13mc.correct,
             exp: unsold.toLocaleString() + " × " + fmt(absUnitCost) + " = " + fmt(unsold*absUnitCost) + ". Absorption includes " + fmt(fmohPerUnit) + " fixed MOH per unit.",
             result: "Ending inventory (absorption) = " + fmt(unsold*absUnitCost),
             formula: "Ending Inventory (Absorption) = Unsold Units × Absorption Unit Cost",
@@ -275,8 +261,8 @@ window.CH7 = {
           title: "Q14 — Inventory Value Difference",
           steps: [{
             inst: "Ending inventory under absorption costing is " + fmt(unsold*absUnitCost) + " and under variable costing is " + fmt(unsold*varUnitCost) + ". What is the difference?",
-            choices: mc(incomeDiff, [fixedMOH, incomeDiff*2, unsold*varUnitCost]).choices,
-            correct: mc(incomeDiff, [fixedMOH, incomeDiff*2, unsold*varUnitCost]).correct,
+            choices: q14mc.choices,
+            correct: q14mc.correct,
             exp: fmt(unsold*absUnitCost) + " − " + fmt(unsold*varUnitCost) + " = " + fmt(incomeDiff) + ". This equals unsold units × fixed MOH per unit — the deferred fixed costs.",
             result: "Inventory difference = " + fmt(incomeDiff),
             formula: "Difference = Unsold Units × Fixed MOH per Unit",
