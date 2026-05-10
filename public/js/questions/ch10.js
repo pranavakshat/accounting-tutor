@@ -114,6 +114,192 @@ window.CH10 = {
               numbers: "NOI = " + fmt(noi) + ", Min required = " + fmt(minReturn * assets)
             }
           ]
+        },
+        {
+          title: "Q5 — Is RI Positive or Negative?",
+          steps: [{
+            inst: "Residual income is " + fmt(Math.round(ri)) + ". What does this tell us about the division's performance?",
+            choices: ri >= 0
+              ? ["A. The division is destroying value", "B. The division earns exactly the minimum required", "C. The division earns more than the minimum required return — creating value", "D. ROI equals the minimum required rate"]
+              : ["A. The division earns more than the minimum required return", "B. The division is breaking even", "C. The division earns less than the minimum required return — destroying value", "D. ROI is zero"],
+            correct: 2,
+            exp: ri >= 0 ? "Positive RI (" + fmt(Math.round(ri)) + ") means the division earns MORE than the " + fmtP(minReturn) + " minimum required — creating value." : "Negative RI (" + fmt(Math.round(ri)) + ") means the division earns LESS than the " + fmtP(minReturn) + " minimum — destroying value.",
+            result: ri >= 0 ? "Positive RI — creating value" : "Negative RI — destroying value",
+            formula: "RI > 0 → creating value | RI < 0 → destroying value",
+            numbers: "RI = " + fmt(Math.round(ri)) + ", Min rate = " + fmtP(minReturn)
+          }]
+        },
+        {
+          title: "Q6 — ROI vs Minimum Return",
+          steps: [{
+            inst: "ROI is " + fmtP(roi) + " and the minimum required return is " + fmtP(minReturn) + ". What is true?",
+            choices: roi >= minReturn
+              ? ["A. The division should be shut down", "B. Residual income is negative", "C. ROI exceeds the minimum — residual income is positive", "D. The division is breaking even"]
+              : ["A. ROI exceeds the hurdle rate — RI is positive", "B. Residual income is positive", "C. The division is earning exactly the minimum", "D. ROI is below the minimum — residual income is negative"],
+            correct: roi >= minReturn ? 2 : 3,
+            exp: "ROI (" + fmtP(roi) + ") " + (roi >= minReturn ? "exceeds" : "is below") + " the minimum required return (" + fmtP(minReturn) + "), so RI is " + (roi >= minReturn ? "positive." : "negative."),
+            result: roi >= minReturn ? "ROI > hurdle rate → RI positive" : "ROI < hurdle rate → RI negative",
+            formula: "If ROI > Min Rate → RI > 0 | If ROI < Min Rate → RI < 0",
+            numbers: "ROI = " + fmtP(roi) + ", Min rate = " + fmtP(minReturn)
+          }]
+        },
+        {
+          title: "Q7 — Effect of Increasing NOI on ROI",
+          steps: [{
+            inst: "If NOI increases by " + fmt(Math.round(noi*0.20)) + " while assets stay constant, what happens to ROI?",
+            choices: ["A. ROI decreases", "B. ROI stays the same", "C. ROI increases", "D. Turnover decreases"],
+            correct: 2,
+            exp: "New ROI = " + fmt(noi + Math.round(noi*0.20)) + " ÷ " + fmt(assets) + " = " + fmtP((noi + Math.round(noi*0.20))/assets) + " vs. old " + fmtP(roi) + ". Higher NOI → higher ROI.",
+            result: "C. ROI increases",
+            formula: "ROI = NOI ÷ Assets. Higher NOI with same assets → higher ROI",
+            numbers: "New NOI = " + fmt(noi+Math.round(noi*0.20)) + ", Assets = " + fmt(assets)
+          }]
+        },
+        {
+          title: "Q8 — Effect of Reducing Assets on ROI",
+          steps: [{
+            inst: "If operating assets decrease by 20% while NOI stays at " + fmt(noi) + ", what is the new ROI?",
+            choices: (function() {
+              var na = Math.round(assets*0.80); var nr = noi/na;
+              var pool = [nr, roi, nr*0.8, roi*1.3].map(function(v){return Math.round(v*1000)/1000;}).filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
+              while(pool.length<4) pool.push(Math.round(nr*(1+pool.length*0.12)*1000)/1000);
+              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+              return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmtP(v);}),correct:s.map(function(v){return Math.round(v*1000);}).indexOf(Math.round(nr*1000))};
+            })().choices,
+            correct: (function() {
+              var na = Math.round(assets*0.80); var nr = noi/na;
+              var pool = [nr, roi, nr*0.8, roi*1.3].map(function(v){return Math.round(v*1000)/1000;}).filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
+              while(pool.length<4) pool.push(Math.round(nr*(1+pool.length*0.12)*1000)/1000);
+              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+              return s.map(function(v){return Math.round(v*1000);}).indexOf(Math.round(nr*1000));
+            })(),
+            exp: fmt(noi) + " ÷ " + fmt(Math.round(assets*0.80)) + " = " + fmtP(noi/Math.round(assets*0.80)) + ". Smaller asset base → higher ROI.",
+            result: "New ROI = " + fmtP(noi/Math.round(assets*0.80)),
+            formula: "ROI = NOI ÷ Assets. Reducing assets increases ROI.",
+            numbers: "NOI = " + fmt(noi) + ", New assets = " + fmt(Math.round(assets*0.80))
+          }]
+        },
+        {
+          title: "Q9 — New Investment: ROI Method Decision",
+          steps: [{
+            inst: "Division ROI is " + fmtP(roi) + ". A new project offers " + fmtP(roi*0.85) + " ROI on " + fmt(Math.round(assets*0.15)) + " of new assets. Under ROI-based evaluation, will the manager accept?",
+            choices: [
+              "A. Yes — any ROI above zero is acceptable",
+              "B. No — the project ROI (" + fmtP(roi*0.85) + ") is below the division's current ROI (" + fmtP(roi) + "), dragging down the average",
+              "C. Yes — the project ROI exceeds the minimum required return",
+              "D. Only if it increases residual income"
+            ],
+            correct: 1,
+            exp: "ROI-method managers reject projects below their current average ROI because it lowers their reported ROI — even if the project exceeds the hurdle rate. This is called goal incongruence.",
+            result: "B. No — lowers division average ROI",
+            formula: "ROI incentive: reject if project ROI < current division ROI",
+            numbers: "Division ROI = " + fmtP(roi) + ", Project ROI = " + fmtP(roi*0.85)
+          }]
+        },
+        {
+          title: "Q10 — New Investment: RI Method Decision",
+          steps: [{
+            inst: "The same project earns " + fmtP(roi*0.85) + " ROI on " + fmt(Math.round(assets*0.15)) + " assets. Minimum required return is " + fmtP(minReturn) + ". What is the project's residual income?",
+            choices: (function() {
+              var pa=Math.round(assets*0.15); var pn=Math.round(pa*roi*0.85); var pr=pn-Math.round(minReturn*pa);
+              var pool=[pr, Math.round(pn), Math.round(minReturn*pa), pr-2000].filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,4);
+              while(pool.length<4) pool.push(pr+pool.length*1000);
+              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+              return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.map(Math.round).indexOf(Math.round(pr))};
+            })().choices,
+            correct: (function() {
+              var pa=Math.round(assets*0.15); var pn=Math.round(pa*roi*0.85); var pr=pn-Math.round(minReturn*pa);
+              var pool=[pr, Math.round(pn), Math.round(minReturn*pa), pr-2000].filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,4);
+              while(pool.length<4) pool.push(pr+pool.length*1000);
+              var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+              return s.map(Math.round).indexOf(Math.round(pr));
+            })(),
+            exp: (function(){var pa=Math.round(assets*0.15);var pn=Math.round(pa*roi*0.85);var pr=pn-Math.round(minReturn*pa);return fmt(pn)+" − "+fmt(Math.round(minReturn*pa))+" = "+fmt(pr)+". "+(pr>0?"Positive → accept under RI method.":"Negative → reject.");})(),
+            result: (function(){var pa=Math.round(assets*0.15);var pn=Math.round(pa*roi*0.85);return "Project RI = "+fmt(pn-Math.round(minReturn*pa));})(),
+            formula: "Project RI = Project NOI − (Min Rate × Project Assets)",
+            numbers: "Project assets = " + fmt(Math.round(assets*0.15)) + ", Min rate = " + fmtP(minReturn)
+          }]
+        },
+        {
+          title: "Q11 — Goal Congruence",
+          steps: [{
+            inst: "A project earns ROI above the minimum required return but below the division's current ROI. Under which evaluation method will a manager ACCEPT the project?",
+            choices: [
+              "A. ROI method only",
+              "B. Residual income method only",
+              "C. Both methods",
+              "D. Neither method"
+            ],
+            correct: 1,
+            exp: "RI method encourages accepting projects exceeding the minimum required return regardless of division average ROI. ROI-based evaluation creates incentive to REJECT valuable projects that lower the division's average — a goal incongruence problem.",
+            result: "B. Residual income method only",
+            formula: "RI: accept if project ROI > min rate | ROI: reject if project ROI < division ROI",
+            numbers: "N/A — conceptual"
+          }]
+        },
+        {
+          title: "Q12 — Compute Missing: NOI from ROI",
+          steps: [{
+            inst: "A division has ROI of " + fmtP(roi) + " and average operating assets of " + fmt(assets) + ". What is net operating income?",
+            choices: mcDollar(noi, [Math.round(noi*1.2), Math.round(noi*0.8), Math.round(assets*minReturn)]).choices,
+            correct: mcDollar(noi, [Math.round(noi*1.2), Math.round(noi*0.8), Math.round(assets*minReturn)]).correct,
+            exp: fmtP(roi) + " × " + fmt(assets) + " = " + fmt(noi),
+            result: "NOI = " + fmt(noi),
+            formula: "NOI = ROI × Average Operating Assets",
+            numbers: "ROI = " + fmtP(roi) + ", Assets = " + fmt(assets)
+          }]
+        },
+        {
+          title: "Q13 — Compute Missing: Assets from Turnover",
+          steps: [{
+            inst: "A division has sales of " + fmt(sales) + " and asset turnover of " + fmtP(turnover) + ". What are average operating assets?",
+            choices: mcDollar(assets, [Math.round(assets*1.25), Math.round(assets*0.75), Math.round(sales*turnover)]).choices,
+            correct: mcDollar(assets, [Math.round(assets*1.25), Math.round(assets*0.75), Math.round(sales*turnover)]).correct,
+            exp: fmt(sales) + " ÷ " + fmtP(turnover) + " = " + fmt(assets),
+            result: "Assets = " + fmt(assets),
+            formula: "Assets = Sales ÷ Turnover",
+            numbers: "Sales = " + fmt(sales) + ", Turnover = " + fmtP(turnover)
+          }]
+        },
+        {
+          title: "Q14 — Compute Missing: Sales from Margin and NOI",
+          steps: [{
+            inst: "A division has NOI of " + fmt(noi) + " and profit margin of " + fmtP(margin) + ". What are total sales?",
+            choices: mcDollar(sales, [Math.round(sales*1.2), Math.round(sales*0.8), Math.round(noi/roi)]).choices,
+            correct: mcDollar(sales, [Math.round(sales*1.2), Math.round(sales*0.8), Math.round(noi/roi)]).correct,
+            exp: fmt(noi) + " ÷ " + fmtP(margin) + " = " + fmt(sales),
+            result: "Sales = " + fmt(sales),
+            formula: "Sales = NOI ÷ Margin",
+            numbers: "NOI = " + fmt(noi) + ", Margin = " + fmtP(margin)
+          }]
+        },
+        {
+          title: "Q15 — Full ROI Analysis",
+          steps: [{
+            inst: "Division A: Sales " + fmt(sales) + ", NOI " + fmt(noi) + ", Assets " + fmt(assets) + ". Division B: same assets but sales of " + fmt(Math.round(sales*1.3)) + " and NOI of " + fmt(Math.round(noi*0.9)) + ". Which division has higher ROI?",
+            choices: (function() {
+              var roiA = noi/assets;
+              var roiB = Math.round(noi*0.9)/assets;
+              return {
+                choices: [
+                  "A. Division A — ROI = " + fmtP(roiA),
+                  "B. Division B — ROI = " + fmtP(roiB),
+                  "C. They are equal",
+                  "D. Cannot be determined without more information"
+                ],
+                correct: roiA >= roiB ? 0 : 1
+              };
+            })().choices,
+            correct: (function() {
+              var roiA = noi/assets;
+              var roiB = Math.round(noi*0.9)/assets;
+              return roiA >= roiB ? 0 : 1;
+            })(),
+            exp: "Division A ROI = " + fmt(noi) + " ÷ " + fmt(assets) + " = " + fmtP(noi/assets) + ". Division B ROI = " + fmt(Math.round(noi*0.9)) + " ÷ " + fmt(assets) + " = " + fmtP(Math.round(noi*0.9)/assets) + ".",
+            result: noi/assets >= Math.round(noi*0.9)/assets ? "Division A has higher ROI" : "Division B has higher ROI",
+            formula: "ROI = NOI ÷ Average Operating Assets",
+            numbers: "A: NOI=" + fmt(noi) + ", B: NOI=" + fmt(Math.round(noi*0.9)) + ", Both assets=" + fmt(assets)
+          }]
         }
       ]
     };

@@ -185,6 +185,231 @@ window.CH6 = {
             formula: "Margin of Safety = Actual Sales − Break-Even Sales",
             numbers: "Actual sales = " + fmt(actualSales) + ", Break-even sales = " + fmt(bepSales)
           }]
+        },
+        {
+          title: "Q7 — Margin of Safety Percentage",
+          steps: [{
+            inst: "Actual sales are " + fmt(actualSales) + " and break-even sales are " + fmt(bepSales) + ". What is the margin of safety as a percentage of actual sales?",
+            choices: (function() {
+              var mosPct = Math.round((mosSales / actualSales) * 100);
+              var pool = [mosPct, Math.round(mosPct * 0.75), Math.round(mosPct * 1.25), 100 - mosPct].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
+              while(pool.length<4) pool.push(mosPct + pool.length*5);
+              var s = pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+              return { choices: s.map(function(v,i){return ['A','B','C','D'][i]+'. '+v+'%';}), correct: s.indexOf(mosPct) };
+            })().choices,
+            correct: (function() {
+              var mosPct = Math.round((mosSales / actualSales) * 100);
+              var pool = [mosPct, Math.round(mosPct * 0.75), Math.round(mosPct * 1.25), 100 - mosPct].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
+              while(pool.length<4) pool.push(mosPct + pool.length*5);
+              var s = pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+              return s.indexOf(mosPct);
+            })(),
+            exp: fmt(mosSales) + " ÷ " + fmt(actualSales) + " = " + Math.round((mosSales/actualSales)*100) + "%",
+            result: "MOS% = " + Math.round((mosSales/actualSales)*100) + "%",
+            formula: "MOS% = Margin of Safety ÷ Actual Sales",
+            numbers: "MOS = " + fmt(mosSales) + ", Actual sales = " + fmt(actualSales)
+          }]
+        },
+        {
+          title: "Q8 — Degree of Operating Leverage",
+          steps: [{
+            inst: "Contribution margin is " + fmt(actualSales * (cm/price)) + " and net operating income is " + fmt(actualSales * (cm/price) - fixedCosts) + ". What is the degree of operating leverage?",
+            choices: (function() {
+              var totalCM = Math.round(actualSales * (cm/price));
+              var noi = totalCM - fixedCosts;
+              if(noi <= 0) noi = totalCM * 0.4;
+              var dol = Math.round(totalCM / noi * 10) / 10;
+              var pool = [dol, Math.round(dol*1.3*10)/10, Math.round(dol*0.7*10)/10, Math.round(dol*1.6*10)/10].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
+              while(pool.length<4) pool.push(dol + pool.length*0.5);
+              var s = pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+              return { choices: s.map(function(v,i){return ['A','B','C','D'][i]+'. '+v+'x';}), correct: s.indexOf(dol) };
+            })().choices,
+            correct: (function() {
+              var totalCM = Math.round(actualSales * (cm/price));
+              var noi = totalCM - fixedCosts;
+              if(noi <= 0) noi = totalCM * 0.4;
+              var dol = Math.round(totalCM / noi * 10) / 10;
+              var pool = [dol, Math.round(dol*1.3*10)/10, Math.round(dol*0.7*10)/10, Math.round(dol*1.6*10)/10].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
+              while(pool.length<4) pool.push(dol + pool.length*0.5);
+              var s = pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+              return s.indexOf(dol);
+            })(),
+            exp: "DOL = Total CM ÷ Net Operating Income = " + fmt(Math.round(actualSales*(cm/price))) + " ÷ " + fmt(Math.max(Math.round(actualSales*(cm/price))-fixedCosts,1)),
+            result: "DOL = " + (Math.round(Math.round(actualSales*(cm/price)) / Math.max(Math.round(actualSales*(cm/price))-fixedCosts,1) * 10)/10) + "x",
+            formula: "DOL = Contribution Margin ÷ Net Operating Income",
+            numbers: "CM = " + fmt(Math.round(actualSales*(cm/price))) + ", NOI = " + fmt(Math.max(Math.round(actualSales*(cm/price))-fixedCosts,1))
+          }]
+        },
+        {
+          title: "Q9 — Net Operating Income",
+          steps: [{
+            inst: "Sales are " + fmt(actualSales) + ", variable costs are " + Math.round((1-(cm/price))*100) + "% of sales, and fixed costs are " + fmt(fixedCosts) + ". What is net operating income?",
+            choices: (function() {
+              var totalCM = Math.round(actualSales * (cm/price));
+              var noi = totalCM - fixedCosts;
+              var pool = [noi, totalCM, noi + fixedCosts/2, noi - fixedCosts/4].map(Math.round).filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,4);
+              while(pool.length<4) pool.push(noi + pool.length * 5000);
+              var s = pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+              return { choices: s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}), correct: s.map(Math.round).indexOf(Math.round(noi)) };
+            })().choices,
+            correct: (function() {
+              var totalCM = Math.round(actualSales * (cm/price));
+              var noi = totalCM - fixedCosts;
+              var pool = [noi, totalCM, noi + fixedCosts/2, noi - fixedCosts/4].map(Math.round).filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,4);
+              while(pool.length<4) pool.push(noi + pool.length * 5000);
+              var s = pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+              return s.map(Math.round).indexOf(Math.round(noi));
+            })(),
+            exp: fmt(actualSales) + " × " + Math.round((cm/price)*100) + "% CM ratio = " + fmt(Math.round(actualSales*(cm/price))) + " CM − " + fmt(fixedCosts) + " fixed = " + fmt(Math.round(actualSales*(cm/price))-fixedCosts),
+            result: "NOI = " + fmt(Math.round(actualSales*(cm/price))-fixedCosts),
+            formula: "NOI = Total CM − Fixed Costs",
+            numbers: "CM ratio = " + Math.round((cm/price)*100) + "%, Sales = " + fmt(actualSales) + ", Fixed costs = " + fmt(fixedCosts)
+          }]
+        },
+        {
+          title: "Q10 — Effect of Sales Increase on Income",
+          steps: [{
+            inst: "If sales increase by 10% from " + fmt(actualSales) + ", how much will net operating income increase? (Current NOI = " + fmt(Math.max(Math.round(actualSales*(cm/price))-fixedCosts,1)) + ", DOL = " + (Math.round(Math.round(actualSales*(cm/price))/Math.max(Math.round(actualSales*(cm/price))-fixedCosts,1)*10)/10) + "x)",
+            choices: (function() {
+              var noi = Math.max(Math.round(actualSales*(cm/price))-fixedCosts,1);
+              var dol = Math.round(Math.round(actualSales*(cm/price))/noi*10)/10;
+              var incr = Math.round(noi * dol * 0.10);
+              var pool = [incr, Math.round(noi*0.10), Math.round(actualSales*0.10), Math.round(incr*1.5)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
+              while(pool.length<4) pool.push(incr + pool.length*2000);
+              var s = pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+              return { choices: s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}), correct: s.indexOf(incr) };
+            })().choices,
+            correct: (function() {
+              var noi = Math.max(Math.round(actualSales*(cm/price))-fixedCosts,1);
+              var dol = Math.round(Math.round(actualSales*(cm/price))/noi*10)/10;
+              var incr = Math.round(noi * dol * 0.10);
+              var pool = [incr, Math.round(noi*0.10), Math.round(actualSales*0.10), Math.round(incr*1.5)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
+              while(pool.length<4) pool.push(incr + pool.length*2000);
+              var s = pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+              return s.indexOf(incr);
+            })(),
+            exp: "10% sales increase × DOL = % increase in NOI. NOI increase = current NOI × DOL × 10%",
+            result: "NOI increase = " + fmt(Math.round(Math.max(Math.round(actualSales*(cm/price))-fixedCosts,1) * (Math.round(Math.round(actualSales*(cm/price))/Math.max(Math.round(actualSales*(cm/price))-fixedCosts,1)*10)/10) * 0.10)),
+            formula: "% Change in NOI = DOL × % Change in Sales",
+            numbers: "DOL = " + (Math.round(Math.round(actualSales*(cm/price))/Math.max(Math.round(actualSales*(cm/price))-fixedCosts,1)*10)/10) + "x, Sales change = 10%"
+          }]
+        },
+        {
+          title: "Q11 — Total Variable Costs",
+          steps: [{
+            inst: "The company sells " + fmtN(Math.round(actualSales/price)) + " units at " + fmt(price) + " each. Variable cost per unit is " + fmt(varCost) + ". What are total variable costs?",
+            choices: (function() {
+              var units = Math.round(actualSales/price);
+              var tvc = units * varCost;
+              var pool = [tvc, units*price, tvc+fixedCosts, Math.round(tvc*0.8)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
+              while(pool.length<4) pool.push(tvc + pool.length * 10000);
+              var s = pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+              return { choices: s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}), correct: s.indexOf(tvc) };
+            })().choices,
+            correct: (function() {
+              var units = Math.round(actualSales/price);
+              var tvc = units * varCost;
+              var pool = [tvc, units*price, tvc+fixedCosts, Math.round(tvc*0.8)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
+              while(pool.length<4) pool.push(tvc + pool.length * 10000);
+              var s = pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+              return s.indexOf(tvc);
+            })(),
+            exp: fmtN(Math.round(actualSales/price)) + " units × " + fmt(varCost) + " = " + fmt(Math.round(actualSales/price)*varCost),
+            result: "Total variable costs = " + fmt(Math.round(actualSales/price)*varCost),
+            formula: "Total Variable Costs = Units Sold × Variable Cost per Unit",
+            numbers: "Units = " + fmtN(Math.round(actualSales/price)) + ", Var cost/unit = " + fmt(varCost)
+          }]
+        },
+        {
+          title: "Q12 — Sales Dollars to Earn Target Profit",
+          steps: [{
+            inst: "The company wants to earn " + fmt(targetProfit) + " in profit. Fixed costs are " + fmt(fixedCosts) + " and CM ratio is " + cmRatioPct + "%. What sales dollars are needed?",
+            choices: (function() {
+              var targetSales = Math.round((fixedCosts + targetProfit) / (cmRatioPct/100));
+              var pool = [targetSales, Math.round(fixedCosts/(cmRatioPct/100)), Math.round(targetSales*1.2), Math.round(targetSales*0.8)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
+              while(pool.length<4) pool.push(targetSales + pool.length * 20000);
+              var s = pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+              return { choices: s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}), correct: s.indexOf(targetSales) };
+            })().choices,
+            correct: (function() {
+              var targetSales = Math.round((fixedCosts + targetProfit) / (cmRatioPct/100));
+              var pool = [targetSales, Math.round(fixedCosts/(cmRatioPct/100)), Math.round(targetSales*1.2), Math.round(targetSales*0.8)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
+              while(pool.length<4) pool.push(targetSales + pool.length * 20000);
+              var s = pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+              return s.indexOf(targetSales);
+            })(),
+            exp: "(" + fmt(fixedCosts) + " + " + fmt(targetProfit) + ") ÷ " + cmRatioPct + "% = " + fmt(Math.round((fixedCosts+targetProfit)/(cmRatioPct/100))),
+            result: "Target sales $ = " + fmt(Math.round((fixedCosts+targetProfit)/(cmRatioPct/100))),
+            formula: "Target Sales $ = (Fixed Costs + Target Profit) ÷ CM Ratio",
+            numbers: "Fixed costs = " + fmt(fixedCosts) + ", Target profit = " + fmt(targetProfit) + ", CM ratio = " + cmRatioPct + "%"
+          }]
+        },
+        {
+          title: "Q13 — Total Contribution Margin",
+          steps: [{
+            inst: "The company sells " + fmtN(beq + Math.round(targetProfit/cm)) + " units at a CM of " + fmt(cm) + " per unit. What is the total contribution margin?",
+            choices: (function() {
+              var units = beq + Math.round(targetProfit/cm);
+              var tcm = units * cm;
+              var pool = [tcm, fixedCosts, tcm+fixedCosts, Math.round(tcm*0.8)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
+              while(pool.length<4) pool.push(tcm + pool.length*5000);
+              var s = pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+              return { choices: s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}), correct: s.indexOf(tcm) };
+            })().choices,
+            correct: (function() {
+              var units = beq + Math.round(targetProfit/cm);
+              var tcm = units * cm;
+              var pool = [tcm, fixedCosts, tcm+fixedCosts, Math.round(tcm*0.8)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
+              while(pool.length<4) pool.push(tcm + pool.length*5000);
+              var s = pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+              return s.indexOf(tcm);
+            })(),
+            exp: fmtN(beq + Math.round(targetProfit/cm)) + " units × " + fmt(cm) + " = " + fmt((beq + Math.round(targetProfit/cm)) * cm),
+            result: "Total CM = " + fmt((beq + Math.round(targetProfit/cm)) * cm),
+            formula: "Total CM = Units Sold × CM per Unit",
+            numbers: "Units = " + fmtN(beq + Math.round(targetProfit/cm)) + ", CM/unit = " + fmt(cm)
+          }]
+        },
+        {
+          title: "Q14 — Variable Cost Ratio",
+          steps: [{
+            inst: "Selling price is " + fmt(price) + " per unit and variable cost is " + fmt(varCost) + " per unit. What is the variable cost ratio?",
+            choices: (function() {
+              var vcr = Math.round((varCost/price)*100);
+              var pool = [vcr, cmRatioPct, 100-cmRatioPct+5, Math.round(vcr*0.8)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0&&v<=100;}).slice(0,4);
+              while(pool.length<4) pool.push(vcr + pool.length*5);
+              var s = pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+              return { choices: s.map(function(v,i){return ['A','B','C','D'][i]+'. '+v+'%';}), correct: s.indexOf(vcr) };
+            })().choices,
+            correct: (function() {
+              var vcr = Math.round((varCost/price)*100);
+              var pool = [vcr, cmRatioPct, 100-cmRatioPct+5, Math.round(vcr*0.8)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0&&v<=100;}).slice(0,4);
+              while(pool.length<4) pool.push(vcr + pool.length*5);
+              var s = pool.slice(0,4).sort(function(){return Math.random()-0.5;});
+              return s.indexOf(vcr);
+            })(),
+            exp: fmt(varCost) + " ÷ " + fmt(price) + " = " + Math.round((varCost/price)*100) + "%. Note: Variable Cost Ratio + CM Ratio = 100%",
+            result: "Variable cost ratio = " + Math.round((varCost/price)*100) + "%",
+            formula: "Variable Cost Ratio = Variable Cost ÷ Selling Price",
+            numbers: "Variable cost = " + fmt(varCost) + ", Price = " + fmt(price)
+          }]
+        },
+        {
+          title: "Q15 — Which Method to Use",
+          steps: [{
+            inst: "The company knows total fixed costs are " + fmt(fixedCosts) + " and CM ratio is " + cmRatioPct + "%. Which formula finds break-even in sales dollars?",
+            choices: [
+              "A. Fixed Costs ÷ CM per Unit",
+              "B. Fixed Costs ÷ CM Ratio",
+              "C. Fixed Costs × CM Ratio",
+              "D. CM Ratio ÷ Fixed Costs"
+            ],
+            correct: 1,
+            exp: "When you know the CM ratio (not per-unit CM), use: Break-Even $ = Fixed Costs ÷ CM Ratio. This gives " + fmt(fixedCosts) + " ÷ " + cmRatioPct + "% = " + fmt(Math.round(fixedCosts/(cmRatioPct/100))),
+            result: "B. Fixed Costs ÷ CM Ratio",
+            formula: "Break-Even Sales $ = Fixed Costs ÷ CM Ratio",
+            numbers: "Fixed costs = " + fmt(fixedCosts) + ", CM ratio = " + cmRatioPct + "%"
+          }]
         }
       ]
     };
