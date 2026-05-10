@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Accounting Exam Prep</title>
+  <style>
+    /* =====================================================
+       RESET & BASE
+    ===================================================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f1f5f9; color: #1e293b; }
+
+    /* =====================================================
+       LAYOUT
+    ===================================================== */
+    .app-shell {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ---- Sidebar ---- */
+    #sidebar {
+      width: 240px;
+      flex-shrink: 0;
+      background: #1a2b4a;
+      color: #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 50;
+      transition: transform 0.25s ease;
+    }
+
+    .sidebar-brand {
+      padding: 20px 18px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-brand h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.3;
+    }
+    .sidebar-brand p {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 3px;
+    }
+
+    .sidebar-nav {
+      padding: 12px 0;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .nav-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      padding: 10px 18px 4px;
+    }
+
+    .nav-link {
+      display: block;
+      padding: 9px 18px;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 13.5px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .nav-link:hover {
+      background: rgba(255,255,255,0.07);
+      color: #e2e8f0;
+    }
+    .nav-link.active {
+      background: rgba(37,99,235,0.25);
+      color: #93c5fd;
+      border-left-color: #2563eb;
+      font-weight: 600;
+    }
+
+    .sidebar-footer {
+      padding: 12px 18px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      font-size: 11px;
+      color: #475569;
+    }
+    .sidebar-footer button {
+      background: none;
+      border: 1px solid #334155;
+      color: #64748b;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 11px;
+      margin-top: 6px;
+    }
+    .sidebar-footer button:hover { border-color: #dc2626; color: #dc2626; }
+
+    /* Main content */
+    .main-content {
+      margin-left: 240px;
+      flex: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top bar (mobile only) */
+    .top-bar {
+      display: none;
+      align-items: center;
+      background: #1a2b4a;
+      padding: 12px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+    #menu-toggle {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 22px;
+      cursor: pointer;
+      padding: 0 10px 0 0;
+    }
+    .top-bar-title { color: #fff; font-size: 15px; font-weight: 700; }
+
+    /* =====================================================
+       VIEWS
+    ===================================================== */
+    .view { display: none; padding: 28px 32px 80px; max-width: 960px; }
+
+    /* =====================================================
+       DASHBOARD
+    ===================================================== */
+    .dash-header h2 { font-size: 26px; font-weight: 700; color: #1e293b; }
+    .dash-header p  { color: #64748b; font-size: 14px; margin-top: 4px; }
+
+    .dash-overall {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 20px 0;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .dash-overall-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .dash-overall-title span:last-child { color: #2563eb; font-size: 15px; }
+    .progress-bar-wrap {
+      background: #e2e8f0;
+      border-radius: 99px;
+      height: 10px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      background: #2563eb;
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+
+    .chapter-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .chapter-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      border: 1px solid #e2e8f0;
+      transition: box-shadow 0.2s;
+    }
+    .chapter-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+    .chapter-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .chapter-num {
+      font-size: 11px;
+      font-weight: 700;
+      background: #eff6ff;
+      color: #2563eb;
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+    .chapter-pct { font-size: 13px; font-weight: 700; color: #16a34a; }
+    .chapter-title { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+    .chapter-desc { font-size: 12px; color: #64748b; margin-bottom: 12px; line-height: 1.4; }
+    .chapter-progress-label { font-size: 11px; color: #94a3b8; margin-top: 5px; margin-bottom: 12px; }
+
+    .btn-practice {
+      width: 100%;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-practice:hover { background: #1d4ed8; }
+
+    .dash-test-section {
+      margin-top: 8px;
+      text-align: center;
+    }
+    .btn-test-big {
+      background: #1a2b4a;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 36px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-test-big:hover { background: #243b5e; }
+
+    /* =====================================================
+       CHAPTER VIEW
+    ===================================================== */
+    .ch-topbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .btn-back {
+      background: none;
+      border: 1px solid #cbd5e1;
+      border-radius: 7px;
+      padding: 7px 13px;
+      font-size: 13px;
+      cursor: pointer;
+      color: #475569;
+      transition: background 0.15s;
+    }
+    .btn-back:hover { background: #f1f5f9; }
+
+    .ch-title { font-size: 22px; font-weight: 700; color: #1e293b; }
+    .ch-desc  { font-size: 13px; color: #64748b; margin: 4px 0 16px; }
+
+    /* Collapsible sections */
+    .collapsible-section {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .collapsible-header {
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+      background: #f8fafc;
+    }
+    .collapsible-header:hover { background: #f1f5f9; }
+
+    #ch-formulas-list {
+      list-style: none;
+      padding: 0 16px 14px;
+    }
+    #ch-formulas-list li {
+      font-size: 13px;
+      color: #334155;
+      padding: 6px 0;
+      border-bottom: 1px solid #f1f5f9;
+      font-family: 'Courier New', monospace;
+    }
+    #ch-formulas-list li:last-child { border-bottom: none; }
+
+    #ch-data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    #ch-data-table td { padding: 7px 16px; border-bottom: 1px solid #f1f5f9; }
+    .data-label { color: #64748b; font-weight: 500; width: 55%; }
+    .data-value { color: #1e293b; font-weight: 700; font-family: 'Courier New', monospace; }
+
+    /* Chapter progress */
+    .ch-progress-bar-wrap {
+      background: #e2e8f0;
+      border-radius: 99px;
+      height: 8px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+    #ch-progress-bar {
+      background: #2563eb;
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+    #ch-progress-label { font-size: 12px; color: #64748b; }
+
+    /* New numbers button */
+    .btn-new-numbers {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #1a2b4a;
+      transition: background 0.15s;
+    }
+    .btn-new-numbers:hover { background: #e2e8f0; }
+
+    /* ---- Questions ---- */
+    #ch-question-area { margin-top: 16px; }
+
+    .q-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a2b4a;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #eff6ff;
+    }
+
+    .step-block {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 12px;
+    }
+    .step-block.step-done {
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+    }
+    .step-block.step-locked {
+      background: #f8fafc;
+      border-color: #e2e8f0;
+      opacity: 0.6;
+    }
+    .step-done-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #16a34a;
+    }
+    .step-locked-label {
+      font-size: 13px;
+      color: #94a3b8;
+      font-style: italic;
+    }
+
+    .step-inst {
+      font-size: 15px;
+      color: #1e293b;
+      line-height: 1.55;
+      margin-bottom: 14px;
+      font-weight: 500;
+    }
+
+    .hint-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .btn-hint {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 7px;
+      padding: 6px 12px;
+      font-size: 12px;
+      color: #2563eb;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+    .btn-hint:hover { background: #dbeafe; }
+    .btn-hint-num { background: #fdf4ff; border-color: #e9d5ff; color: #7c3aed; }
+    .btn-hint-num:hover { background: #ede9fe; }
+
+    .hint-formula, .hint-numbers {
+      font-size: 13px;
+      padding: 8px 12px;
+      border-radius: 7px;
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+    .hint-formula  { background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; }
+    .hint-numbers  { background: #fdf4ff; border: 1px solid #e9d5ff; color: #6d28d9; }
+
+    .answer-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .answer-btn {
+      background: #fff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 9px;
+      padding: 11px 12px;
+      font-size: 13.5px;
+      text-align: left;
+      cursor: pointer;
+      color: #334155;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      line-height: 1.35;
+    }
+    .answer-btn:hover:not(:disabled) {
+      background: #f0f9ff;
+      border-color: #7dd3fc;
+    }
+    .answer-btn:disabled { cursor: not-allowed; }
+    .answer-btn.answer-correct {
+      background: #dcfce7;
+      border-color: #16a34a;
+      color: #15803d;
+      font-weight: 700;
+    }
+    .answer-btn.answer-wrong {
+      background: #fef2f2;
+      border-color: #dc2626;
+      color: #b91c1c;
+    }
+
+    .feedback-area { margin-top: 10px; }
+    .feedback-success {
+      background: #dcfce7;
+      border: 1px solid #16a34a;
+      border-radius: 7px;
+      padding: 9px 13px;
+      font-size: 13px;
+      color: #15803d;
+      font-weight: 600;
+    }
+    .feedback-error {
+      background: #fef2f2;
+      border: 1px solid #fca5a5;
+      border-radius: 7px;
+      padding: 9px 13px;
+      font-size: 13px;
+      color: #b91c1c;
+      font-weight: 600;
+    }
+
+    .step-breakdown {
+      margin-top: 12px;
+      padding: 14px;
+      background: #fef9c3;
+      border: 1px solid #eab308;
+      border-radius: 9px;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .step-breakdown p { margin-bottom: 5px; }
+    .step-breakdown p:last-child { margin-bottom: 0; }
+    .breakdown-title { font-weight: 700; color: #854d0e; font-size: 14px; }
+
+    /* Answer sheet */
+    .answer-sheet {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+    .answer-sheet-header {
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      background: #f8fafc;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .answer-sheet-header:hover { background: #f1f5f9; }
+    #answer-sheet-content { padding: 10px 16px 14px; }
+    .answer-sheet-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 5px 0;
+      font-size: 13px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .answer-sheet-row:last-child { border-bottom: none; }
+    .answer-sheet-num { color: #94a3b8; font-weight: 600; min-width: 20px; }
+    .answer-sheet-val { color: #334155; font-family: 'Courier New', monospace; }
+
+    /* Chapter complete */
+    .chapter-complete {
+      text-align: center;
+      padding: 40px 20px;
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+    }
+    .complete-icon { font-size: 56px; margin-bottom: 16px; }
+    .chapter-complete h2 { font-size: 24px; font-weight: 700; color: #16a34a; margin-bottom: 10px; }
+    .chapter-complete p  { font-size: 14px; color: #64748b; margin-bottom: 8px; }
+    .btn-secondary {
+      background: none;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px 22px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #475569;
+      margin-top: 12px;
+      margin-left: 8px;
+      transition: background 0.15s;
+    }
+    .btn-secondary:hover { background: #f1f5f9; }
+    .chapter-complete .btn-new-numbers { margin-top: 20px; font-size: 15px; padding: 12px 28px; }
+
+    /* =====================================================
+       TEST MODE
+    ===================================================== */
+    .test-header { margin-bottom: 20px; }
+    .test-header h2 { font-size: 24px; font-weight: 700; }
+    .test-header p  { font-size: 14px; color: #64748b; margin-top: 4px; }
+
+    .test-config-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    .test-config-card h3 { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 14px; }
+
+    #test-chapter-checkboxes {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .test-ch-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      color: #334155;
+      cursor: pointer;
+      padding: 6px 0;
+    }
+    .test-ch-label input { margin-top: 2px; accent-color: #2563eb; }
+
+    .test-config-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    .test-config-row label { color: #475569; font-weight: 500; }
+    input[type=range] { accent-color: #2563eb; cursor: pointer; }
+    #test-num-display { font-weight: 700; color: #2563eb; min-width: 30px; }
+
+    .test-toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 14px;
+      font-size: 14px;
+      color: #475569;
+    }
+    input[type=checkbox] { accent-color: #2563eb; width: 15px; height: 15px; }
+
+    .test-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-start-test {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 9px;
+      padding: 12px 30px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-start-test:hover { background: #1d4ed8; }
+
+    /* Running test */
+    .test-running-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    #test-q-counter { font-size: 14px; font-weight: 700; color: #475569; }
+    #test-timer { font-size: 14px; color: #64748b; font-family: monospace; }
+
+    .test-progress-wrap {
+      background: #e2e8f0;
+      border-radius: 99px;
+      height: 6px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    #test-q-progress {
+      background: #2563eb;
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.3s;
+      width: 0%;
+    }
+    #test-ch-label-run {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #94a3b8;
+      margin-bottom: 16px;
+    }
+
+    #test-question-area {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    /* Results */
+    .result-scorecard {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 28px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .result-scorecard h2 { font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 16px; }
+    #result-score { font-size: 48px; font-weight: 800; color: #1a2b4a; display: block; }
+    #result-pct   { font-size: 24px; font-weight: 700; color: #64748b; display: block; margin-top: 6px; }
+    .result-pass  { display: inline-block; margin-top: 12px; padding: 6px 22px; border-radius: 99px; font-size: 16px; font-weight: 800; background: #dcfce7; color: #16a34a; }
+    .result-fail  { display: inline-block; margin-top: 12px; padding: 6px 22px; border-radius: 99px; font-size: 16px; font-weight: 800; background: #fef2f2; color: #dc2626; }
+
+    .result-section {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .result-section h4 { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 12px; }
+    .result-ch-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      padding: 6px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .result-ch-row:last-child { border-bottom: none; }
+    .result-ch-row span:first-child { color: #475569; }
+    .result-ch-row span:last-child  { font-weight: 700; color: #1a2b4a; }
+
+    .missed-q {
+      padding: 12px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .missed-q:last-child { border-bottom: none; }
+    .missed-q-text   { font-size: 13.5px; color: #1e293b; margin-bottom: 5px; font-weight: 500; }
+    .missed-correct  { font-size: 13px; color: #16a34a; margin-bottom: 3px; }
+
+    .result-actions { display: flex; gap: 10px; margin-top: 8px; }
+
+    /* =====================================================
+       FLOATING TOOLS
+    ===================================================== */
+    .calc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .calc-header span { font-weight: 600; font-size: 14px; }
+
+    /* =====================================================
+       RESPONSIVE — MOBILE
+    ===================================================== */
+    @media (max-width: 720px) {
+      #sidebar {
+        transform: translateX(-100%);
+      }
+      #sidebar.sidebar-open {
+        transform: translateX(0);
+      }
+      .main-content {
+        margin-left: 0;
+      }
+      .top-bar {
+        display: flex;
+      }
+      .view {
+        padding: 20px 16px 80px;
+      }
+      .chapter-grid {
+        grid-template-columns: 1fr;
+      }
+      .answer-buttons {
+        grid-template-columns: 1fr;
+      }
+      #test-chapter-checkboxes {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <nav id="sidebar">
+    <div class="sidebar-brand">
+      <h1>Accounting Exam Prep</h1>
+      <p>Managerial Accounting Final</p>
+    </div>
+
+    <div class="sidebar-nav">
+      <div class="nav-section-label">Navigation</div>
+      <a href="#" id="nav-dashboard" class="nav-link">&#127968; Dashboard</a>
+      <a href="#" id="nav-test" class="nav-link">&#128221; Take a Test</a>
+
+      <div class="nav-section-label" style="margin-top:8px;">Chapters</div>
+      <a href="#" class="nav-link nav-ch" data-navch="ch1">Ch 1 — Cost Classification</a>
+      <a href="#" class="nav-link nav-ch" data-navch="ch6">Ch 6 — CVP Analysis</a>
+      <a href="#" class="nav-link nav-ch" data-navch="ch7">Ch 7 — Variable vs Absorption</a>
+      <a href="#" class="nav-link nav-ch" data-navch="ch8">Ch 8 — Master Budget</a>
+      <a href="#" class="nav-link nav-ch" data-navch="ch9">Ch 9 — Variance Analysis</a>
+      <a href="#" class="nav-link nav-ch" data-navch="ch10">Ch 10 — ROI &amp; Residual Income</a>
+    </div>
+
+    <div class="sidebar-footer">
+      <div>Progress saved locally</div>
+      <button id="reset-progress-btn">Reset Progress</button>
+    </div>
+  </nav>
+
+  <!-- ============ MAIN CONTENT ============ -->
+  <div class="main-content">
+
+    <!-- Mobile top bar -->
+    <div class="top-bar">
+      <button id="menu-toggle">&#9776;</button>
+      <span class="top-bar-title">Accounting Exam Prep</span>
+    </div>
+
+    <!-- ====== DASHBOARD ====== -->
+    <div id="view-dashboard" class="view">
+      <div class="dash-header">
+        <h2>Accounting Exam Prep</h2>
+        <p>Managerial Accounting Final — Practice &amp; Master Every Concept</p>
+      </div>
+
+      <div class="dash-overall">
+        <div class="dash-overall-title">
+          <span>Overall Progress</span>
+          <span id="dash-overall-pct">0%</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="dash-overall-bar" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="chapter-grid" id="dash-chapter-grid">
+        <!-- Cards rendered by JS -->
+      </div>
+
+      <div class="dash-test-section">
+        <button class="btn-test-big" id="dash-test-btn">&#128221; Take a Practice Test</button>
+      </div>
+    </div>
+
+    <!-- ====== CHAPTER PRACTICE ====== -->
+    <div id="view-chapter" class="view">
+      <div class="ch-topbar">
+        <button class="btn-back" id="ch-back-btn">&#8592; Dashboard</button>
+        <button class="btn-new-numbers" id="ch-new-numbers-btn">&#9654; New Numbers</button>
+      </div>
+
+      <h2 class="ch-title" id="ch-title"></h2>
+      <p class="ch-desc"  id="ch-desc"></p>
+
+      <!-- Formulas (collapsible) -->
+      <div class="collapsible-section">
+        <div class="collapsible-header" id="ch-formulas-toggle">
+          &#9660; Hide Formulas
+        </div>
+        <ul id="ch-formulas-list"></ul>
+      </div>
+
+      <!-- Data table (collapsible) -->
+      <div class="collapsible-section" id="ch-data-section">
+        <div class="collapsible-header" id="ch-data-toggle">
+          &#9660; Hide Data
+        </div>
+        <table id="ch-data-table"></table>
+      </div>
+
+      <!-- Progress -->
+      <div style="margin-bottom:16px;">
+        <div class="ch-progress-bar-wrap">
+          <div id="ch-progress-bar"></div>
+        </div>
+        <div id="ch-progress-label">Step 0 of 0</div>
+      </div>
+
+      <!-- Questions -->
+      <div id="ch-question-area"></div>
+
+      <!-- Answer sheet -->
+      <div class="answer-sheet">
+        <div class="answer-sheet-header" id="answer-sheet-toggle">
+          &#9660; Hide Answer Sheet
+        </div>
+        <div id="answer-sheet-content">
+          <div id="answer-sheet-list"><p style="color:#666;font-size:13px;">No answers yet.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== TEST MODE ====== -->
+    <div id="view-test" class="view">
+
+      <!-- Setup -->
+      <div id="test-setup">
+        <div class="test-header">
+          <h2>Configure Your Test</h2>
+          <p>Select chapters, number of questions, and options below.</p>
+        </div>
+
+        <div class="test-config-card">
+          <h3>Chapters to include</h3>
+          <div id="test-chapter-checkboxes">
+            <!-- Filled by JS -->
+          </div>
+        </div>
+
+        <div class="test-config-card">
+          <h3>Number of questions</h3>
+          <div class="test-config-row">
+            <label for="test-num-questions">Questions:</label>
+            <input type="range" id="test-num-questions" min="5" max="25" step="5" value="10"
+              oninput="document.getElementById('test-num-display').textContent = this.value" />
+            <span id="test-num-display">10</span>
+          </div>
+          <div class="test-toggle-row">
+            <input type="checkbox" id="test-include-defs" checked />
+            <label for="test-include-defs">Include definition / conceptual questions</label>
+          </div>
+        </div>
+
+        <div class="test-actions">
+          <button class="btn-start-test" id="test-start-btn">Start Test &#8594;</button>
+          <button class="btn-secondary" id="test-back-btn">&#8592; Back</button>
+        </div>
+      </div>
+
+      <!-- Running test -->
+      <div id="test-running" style="display:none;">
+        <div class="test-running-header">
+          <span id="test-q-counter">Question 1 of 10</span>
+          <span id="test-timer">0:00</span>
+        </div>
+        <div class="test-progress-wrap">
+          <div id="test-q-progress"></div>
+        </div>
+        <div id="test-ch-label-run"></div>
+        <div id="test-question-area"></div>
+      </div>
+
+      <!-- Results -->
+      <div id="test-results" style="display:none;">
+        <div class="result-scorecard">
+          <h2>Test Results</h2>
+          <span id="result-score">0 / 0</span>
+          <span id="result-pct">0%</span>
+          <span id="result-pass" class="result-pass">PASS</span>
+        </div>
+
+        <div class="result-section" id="result-breakdown">
+          <!-- Filled by JS -->
+        </div>
+
+        <div class="result-section" id="result-missed">
+          <!-- Filled by JS -->
+        </div>
+
+        <div class="result-actions">
+          <button class="btn-start-test" id="result-retake-btn">&#8635; New Test</button>
+          <button class="btn-secondary" id="result-dash-btn">&#127968; Dashboard</button>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- /main-content -->
+</div><!-- /app-shell -->
+
+<!-- ============ FLOATING CALCULATOR ============ -->
+<div id="calc-btn" style="position:fixed;bottom:80px;right:20px;background:#1a2b4a;color:white;padding:12px;border-radius:50%;cursor:pointer;font-size:20px;box-shadow:0 2px 8px rgba(0,0,0,0.3);z-index:100;width:48px;height:48px;display:flex;align-items:center;justify-content:center;" title="Calculator">&#129518;</div>
+
+<div id="calc-popup" style="display:none;position:fixed;bottom:140px;right:20px;background:white;border-radius:12px;padding:16px;box-shadow:0 4px 20px rgba(0,0,0,0.18);z-index:101;width:248px;">
+  <div class="calc-header">
+    <span>Calculator</span>
+    <button id="calc-close" style="background:none;border:none;cursor:pointer;font-size:20px;color:#64748b;line-height:1;">&#215;</button>
+  </div>
+  <input id="calc-display" style="width:100%;padding:8px 10px;font-size:20px;text-align:right;border:1px solid #e2e8f0;border-radius:7px;margin-bottom:10px;box-sizing:border-box;font-family:monospace;background:#f8fafc;" value="0" readonly />
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;">
+    <button class="calc-key" data-val="MS" style="padding:10px 6px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;background:#f0f4ff;font-size:12px;font-weight:600;">MS</button>
+    <button class="calc-key" data-val="MR" style="padding:10px 6px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;background:#f0f4ff;font-size:12px;font-weight:600;">MR</button>
+    <button class="calc-key" data-val="⌫" style="padding:10px 6px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;background:#fef2f2;font-size:14px;">&#9003;</button>
+    <button class="calc-key" data-val="C"  style="padding:10px 6px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;background:#fef2f2;font-size:13px;font-weight:700;">C</button>
+
+    <button class="calc-key" data-val="7" style="padding:11px 6px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;font-size:15px;">7</button>
+    <button class="calc-key" data-val="8" style="padding:11px 6px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;font-size:15px;">8</button>
+    <button class="calc-key" data-val="9" style="padding:11px 6px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;font-size:15px;">9</button>
+    <button class="calc-key" data-val="/" style="padding:11px 6px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;background:#f0f4ff;font-size:15px;font-weight:700;">&#247;</button>
+
+    <button class="calc-key" data-val="4" style="padding:11px 6px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;font-size:15px;">4</button>
+    <button class="calc-key" data-val="5" style="padding:11px 6px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;font-size:15px;">5</button>
+    <button class="calc-key" data-val="6" style="padding:11px 6px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;font-size:15px;">6</button>
+    <button class="calc-key" data-val="*" style="padding:11px 6px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;background:#f0f4ff;font-size:15px;font-weight:700;">&#215;</button>
+
+    <button class="calc-key" data-val="1" style="padding:11px 6px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;font-size:15px;">1</button>
+    <button class="calc-key" data-val="2" style="padding:11px 6px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;font-size:15px;">2</button>
+    <button class="calc-key" data-val="3" style="padding:11px 6px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;font-size:15px;">3</button>
+    <button class="calc-key" data-val="-" style="padding:11px 6px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;background:#f0f4ff;font-size:18px;font-weight:700;">&#8722;</button>
+
+    <button class="calc-key" data-val="0"  style="padding:11px 6px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;font-size:15px;grid-column:span 2;">0</button>
+    <button class="calc-key" data-val="."  style="padding:11px 6px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;font-size:15px;">.</button>
+    <button class="calc-key" data-val="+"  style="padding:11px 6px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;background:#f0f4ff;font-size:18px;font-weight:700;">+</button>
+
+    <button class="calc-key" data-val="="  style="padding:12px 6px;border:none;border-radius:6px;cursor:pointer;background:#2563eb;color:white;font-size:18px;font-weight:700;grid-column:span 4;">=</button>
+  </div>
+</div>
+
+<!-- ============ FLOATING CLIPBOARD ============ -->
+<div id="clip-btn" style="position:fixed;bottom:20px;right:20px;background:#1a2b4a;color:white;padding:12px;border-radius:50%;cursor:pointer;font-size:20px;box-shadow:0 2px 8px rgba(0,0,0,0.3);z-index:100;width:48px;height:48px;display:flex;align-items:center;justify-content:center;" title="Notepad">&#128203;</div>
+
+<div id="clip-popup" style="display:none;position:fixed;bottom:80px;right:20px;background:white;border-radius:12px;padding:16px;box-shadow:0 4px 20px rgba(0,0,0,0.18);z-index:101;width:288px;max-height:420px;overflow-y:auto;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e2e8f0;">
+    <span style="font-weight:700;font-size:14px;">My Notes</span>
+    <button id="clip-close" style="background:none;border:none;cursor:pointer;font-size:20px;color:#64748b;line-height:1;">&#215;</button>
+  </div>
+  <div style="display:flex;gap:6px;margin-bottom:10px;align-items:stretch;">
+    <input id="clip-label" placeholder="Label (e.g. CM/unit)" style="flex:1;min-width:0;padding:7px 9px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;" />
+    <input id="clip-value" placeholder="Value" style="width:76px;padding:7px 9px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;" />
+    <button id="clip-save" style="padding:7px 11px;background:#2563eb;color:white;border:none;border-radius:7px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;">Save</button>
+  </div>
+  <div id="clip-list"></div>
+  <button id="clip-clear" style="margin-top:10px;padding:6px 14px;background:none;border:1px solid #e2e8f0;border-radius:7px;cursor:pointer;font-size:12px;color:#94a3b8;">Clear all</button>
+</div>
+
+<!-- ============ SCRIPTS ============ -->
+<script src="js/questions/ch1.js"></script>
+<script src="js/questions/ch6.js"></script>
+<script src="js/questions/ch7.js"></script>
+<script src="js/questions/ch8.js"></script>
+<script src="js/questions/ch9.js"></script>
+<script src="js/questions/ch10.js"></script>
+<script src="js/progress.js"></script>
+<script src="js/calculator.js"></script>
+<script src="js/clipboard.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
