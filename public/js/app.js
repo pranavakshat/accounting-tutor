@@ -4,11 +4,15 @@
 
 var CHAPTERS = [
   { id: 'ch1',  module: 'CH1',  num: 1  },
+  { id: 'ch2',  module: 'CH2',  num: 2  },
+  { id: 'ch5',  module: 'CH5',  num: 5  },
   { id: 'ch6',  module: 'CH6',  num: 6  },
   { id: 'ch7',  module: 'CH7',  num: 7  },
   { id: 'ch8',  module: 'CH8',  num: 8  },
   { id: 'ch9',  module: 'CH9',  num: 9  },
-  { id: 'ch10', module: 'CH10', num: 10 }
+  { id: 'ch10', module: 'CH10', num: 10 },
+  { id: 'ch11', module: 'CH11', num: 11 },
+  { id: 'ch12', module: 'CH12', num: 12 }
 ];
 
 // ---- State ----
@@ -579,6 +583,90 @@ function showTestResults() {
 
 // ---- Event wiring ----
 document.addEventListener('DOMContentLoaded', function() {
+
+  // ---- Auth check ----
+  function showAuthOverlay() {
+    var overlay = document.getElementById('auth-overlay');
+    var appShell = document.querySelector('.app-shell');
+    if (overlay) overlay.style.display = 'flex';
+    if (appShell) appShell.style.display = 'none';
+  }
+
+  function hideAuthOverlay() {
+    var overlay = document.getElementById('auth-overlay');
+    var appShell = document.querySelector('.app-shell');
+    if (overlay) overlay.style.display = 'none';
+    if (appShell) appShell.style.display = 'flex';
+    updateUserDisplay();
+  }
+
+  function updateUserDisplay() {
+    var user = window.AUTH ? window.AUTH.getCurrentUser() : null;
+    var userEl = document.getElementById('sidebar-username');
+    if (userEl && user) userEl.textContent = user;
+  }
+
+  function setAuthError(msg) {
+    var errEl = document.getElementById('auth-error');
+    if (errEl) errEl.textContent = msg || '';
+  }
+
+  if (window.AUTH && !window.AUTH.getCurrentUser()) {
+    showAuthOverlay();
+  } else {
+    hideAuthOverlay();
+  }
+
+  var loginBtn = document.getElementById('auth-login-btn');
+  if (loginBtn) {
+    loginBtn.addEventListener('click', function() {
+      var username = (document.getElementById('auth-username') || {}).value || '';
+      var password = (document.getElementById('auth-password') || {}).value || '';
+      if (!username || !password) { setAuthError('Please enter a username and password.'); return; }
+      var ok = window.AUTH.login(username, password);
+      if (ok) { setAuthError(''); hideAuthOverlay(); renderDashboard(); }
+      else { setAuthError('Invalid username or password.'); }
+    });
+  }
+
+  var registerBtn = document.getElementById('auth-register-btn');
+  if (registerBtn) {
+    registerBtn.addEventListener('click', function() {
+      var username = (document.getElementById('auth-username') || {}).value || '';
+      var password = (document.getElementById('auth-password') || {}).value || '';
+      var err = window.AUTH.register(username, password);
+      if (err) { setAuthError(err); }
+      else { setAuthError(''); hideAuthOverlay(); renderDashboard(); }
+    });
+  }
+
+  // Allow Enter key to submit login
+  var authFields = ['auth-username', 'auth-password'];
+  authFields.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { if (loginBtn) loginBtn.click(); }
+      });
+    }
+  });
+
+  // Logout button
+  var logoutBtn = document.getElementById('sidebar-logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', function() {
+      if (confirm('Log out?')) {
+        window.AUTH.logout();
+        showAuthOverlay();
+        var uEl = document.getElementById('auth-username');
+        var pEl = document.getElementById('auth-password');
+        if (uEl) uEl.value = '';
+        if (pEl) pEl.value = '';
+        setAuthError('');
+      }
+    });
+  }
+
   // Nav links
   CHAPTERS.forEach(function(ch) {
     var el = document.querySelector('[data-navch="' + ch.id + '"]');

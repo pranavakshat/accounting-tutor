@@ -106,6 +106,108 @@
     }
     .sidebar-footer button:hover { border-color: #dc2626; color: #dc2626; }
 
+    /* =====================================================
+       AUTH OVERLAY
+    ===================================================== */
+    #auth-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 25, 45, 0.97);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .auth-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    }
+    .auth-card h2 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #1a2b4a;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+    .auth-card p {
+      font-size: 13px;
+      color: #64748b;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .auth-field {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 12px;
+      box-sizing: border-box;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .auth-field:focus { border-color: #2563eb; }
+    .auth-btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .auth-btn {
+      flex: 1;
+      padding: 11px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .auth-btn-primary { background: #2563eb; color: #fff; }
+    .auth-btn-primary:hover { background: #1d4ed8; }
+    .auth-btn-secondary { background: #f1f5f9; color: #1a2b4a; }
+    .auth-btn-secondary:hover { background: #e2e8f0; }
+    #auth-error {
+      font-size: 12px;
+      color: #dc2626;
+      text-align: center;
+      margin-top: 10px;
+      min-height: 18px;
+    }
+
+    /* Sidebar user display */
+    .sidebar-user {
+      padding: 10px 18px 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .sidebar-user-name {
+      font-size: 12px;
+      color: #93c5fd;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .sidebar-user-icon { font-size: 13px; color: #64748b; }
+    #sidebar-logout-btn {
+      background: none;
+      border: 1px solid #334155;
+      color: #64748b;
+      padding: 3px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 10px;
+      white-space: nowrap;
+    }
+    #sidebar-logout-btn:hover { border-color: #dc2626; color: #dc2626; }
+
     /* Main content */
     .main-content {
       margin-left: 240px;
@@ -745,6 +847,21 @@
 </head>
 <body>
 
+<!-- ============ AUTH OVERLAY ============ -->
+<div id="auth-overlay">
+  <div class="auth-card">
+    <h2>Accounting Exam Prep</h2>
+    <p>Managerial Accounting Final — sign in to track your progress</p>
+    <input id="auth-username" class="auth-field" type="text" placeholder="Username" autocomplete="username" />
+    <input id="auth-password" class="auth-field" type="password" placeholder="Password" autocomplete="current-password" />
+    <div class="auth-btn-row">
+      <button class="auth-btn auth-btn-primary" id="auth-login-btn">Login</button>
+      <button class="auth-btn auth-btn-secondary" id="auth-register-btn">Create Account</button>
+    </div>
+    <div id="auth-error"></div>
+  </div>
+</div>
+
 <div class="app-shell">
 
   <!-- ============ SIDEBAR ============ -->
@@ -754,6 +871,12 @@
       <p>Managerial Accounting Final</p>
     </div>
 
+    <div class="sidebar-user">
+      <span class="sidebar-user-icon">&#128100;</span>
+      <span class="sidebar-user-name" id="sidebar-username">Guest</span>
+      <button id="sidebar-logout-btn">Log out</button>
+    </div>
+
     <div class="sidebar-nav">
       <div class="nav-section-label">Navigation</div>
       <a href="#" id="nav-dashboard" class="nav-link">&#127968; Dashboard</a>
@@ -761,15 +884,19 @@
 
       <div class="nav-section-label" style="margin-top:8px;">Chapters</div>
       <a href="#" class="nav-link nav-ch" data-navch="ch1">Ch 1 — Cost Classification</a>
+      <a href="#" class="nav-link nav-ch" data-navch="ch2">Ch 2 — Job Order Costing</a>
+      <a href="#" class="nav-link nav-ch" data-navch="ch5">Ch 5 — Process Costing</a>
       <a href="#" class="nav-link nav-ch" data-navch="ch6">Ch 6 — CVP Analysis</a>
       <a href="#" class="nav-link nav-ch" data-navch="ch7">Ch 7 — Variable vs Absorption</a>
       <a href="#" class="nav-link nav-ch" data-navch="ch8">Ch 8 — Master Budget</a>
       <a href="#" class="nav-link nav-ch" data-navch="ch9">Ch 9 — Variance Analysis</a>
       <a href="#" class="nav-link nav-ch" data-navch="ch10">Ch 10 — ROI &amp; Residual Income</a>
+      <a href="#" class="nav-link nav-ch" data-navch="ch11">Ch 11 — Relevant Costs</a>
+      <a href="#" class="nav-link nav-ch" data-navch="ch12">Ch 12 — Capital Budgeting</a>
     </div>
 
     <div class="sidebar-footer">
-      <div>Progress saved locally</div>
+      <div>Progress saved per user</div>
       <button id="reset-progress-btn">Reset Progress</button>
     </div>
   </nav>
@@ -991,12 +1118,17 @@
 </div>
 
 <!-- ============ SCRIPTS ============ -->
+<script src="js/auth.js"></script>
 <script src="js/questions/ch1.js"></script>
+<script src="js/questions/ch2.js"></script>
+<script src="js/questions/ch5.js"></script>
 <script src="js/questions/ch6.js"></script>
 <script src="js/questions/ch7.js"></script>
 <script src="js/questions/ch8.js"></script>
 <script src="js/questions/ch9.js"></script>
 <script src="js/questions/ch10.js"></script>
+<script src="js/questions/ch11.js"></script>
+<script src="js/questions/ch12.js"></script>
 <script src="js/progress.js"></script>
 <script src="js/calculator.js"></script>
 <script src="js/clipboard.js"></script>

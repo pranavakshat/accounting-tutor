@@ -1,5 +1,5 @@
 window.Progress = {
-  KEY: 'accounting_tutor_progress',
+  get KEY() { return window.AUTH ? window.AUTH.progressKey() : 'accounting_tutor_progress'; },
 
   load: function() {
     try {
@@ -15,11 +15,15 @@ window.Progress = {
     return {
       chapters: {
         ch1:  { completed: 0, total: 5,  attempts: {} },
+        ch2:  { completed: 0, total: 15, attempts: {} },
+        ch5:  { completed: 0, total: 15, attempts: {} },
         ch6:  { completed: 0, total: 6,  attempts: {} },
         ch7:  { completed: 0, total: 5,  attempts: {} },
         ch8:  { completed: 0, total: 15, attempts: {} },
         ch9:  { completed: 0, total: 6,  attempts: {} },
-        ch10: { completed: 0, total: 4,  attempts: {} }
+        ch10: { completed: 0, total: 4,  attempts: {} },
+        ch11: { completed: 0, total: 15, attempts: {} },
+        ch12: { completed: 0, total: 15, attempts: {} }
       },
       testHistory: []
     };
