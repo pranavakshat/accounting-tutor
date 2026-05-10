@@ -288,7 +288,12 @@ function handleAnswer(btn, isCorrect, qIdx, stepIdx, step, stepEl, btnWrap) {
     updateAnswerSheet();
     updateChapterProgress();
 
-    setTimeout(function() { advanceStep(); }, 1200);
+    // Show persistent Next button so user can read the explanation
+    var nextBtn = document.createElement('button');
+    nextBtn.className = 'btn-next-question';
+    nextBtn.textContent = 'Next →';
+    nextBtn.addEventListener('click', function() { advanceStep(); });
+    stepEl.appendChild(nextBtn);
   } else {
     wrongAttempts[attemptKey]++;
     btn.classList.add('answer-wrong');

@@ -93,26 +93,62 @@ window.CH12 = {
 
     function mc(correct, wrongs) {
       var cR = Math.round(correct);
-      var pool = [cR].concat(wrongs.map(Math.round).filter(function(w) { return Math.abs(w - cR) > 1000; })).slice(0, 4);
-      while (pool.length < 4) pool.push(Math.round(Math.abs(cR) * (1 + 0.1 * pool.length) * (cR < 0 ? -1 : 1)));
+      var pool = [cR];
+      wrongs.forEach(function(w) {
+        var r = Math.round(w);
+        if (r !== cR && pool.indexOf(r) === -1) pool.push(r);
+      });
+      var k = 1;
+      while (pool.length < 4) {
+        var f = Math.round(Math.abs(cR) * (1 + 0.13 * k) + 1031 * k) * (cR < 0 ? -1 : 1);
+        if (pool.indexOf(f) === -1 && f !== 0) pool.push(f);
+        k++;
+        if (k > 50) break;
+      }
       var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
       var idx = s.indexOf(cR);
       return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmt(v); }), correct: idx };
     }
 
     function mcSmall(correct, wrongs) {
-      var pool = [correct].concat(wrongs).slice(0, 4);
+      var key = function(v) { return Math.round(v * 100); };
+      var cK = key(correct);
+      var pool = [correct];
+      var seen = [cK];
+      wrongs.forEach(function(w) {
+        var k = key(w);
+        if (k !== cK && seen.indexOf(k) === -1) { pool.push(w); seen.push(k); }
+      });
+      var i = 1;
+      while (pool.length < 4) {
+        var f = correct * (1 + 0.13 * i) + 0.07 * i;
+        if (seen.indexOf(key(f)) === -1) { pool.push(f); seen.push(key(f)); }
+        i++;
+        if (i > 50) break;
+      }
       var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
-      var cR = Math.round(correct * 100);
-      var idx = s.findIndex(function(v) { return Math.round(v * 100) === cR; });
+      var idx = s.findIndex(function(v) { return key(v) === cK; });
       return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtD(v); }), correct: idx };
     }
 
     function mcPct(correct, wrongs) {
-      var pool = [correct].concat(wrongs).slice(0, 4);
+      var key = function(v) { return Math.round(v * 10); };
+      var cK = key(correct);
+      var pool = [correct];
+      var seen = [cK];
+      wrongs.forEach(function(w) {
+        var k = key(w);
+        if (k !== cK && seen.indexOf(k) === -1) { pool.push(w); seen.push(k); }
+      });
+      var i = 1;
+      while (pool.length < 4) {
+        var f = correct * (1 + 0.13 * i) + 0.7 * i;
+        if (seen.indexOf(key(f)) === -1) { pool.push(f); seen.push(key(f)); }
+        i++;
+        if (i > 50) break;
+      }
       var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
-      var cR = Math.round(correct * 10);
-      var idx = s.findIndex(function(v) { return Math.round(v * 10) === cR; });
+      var idx = s.findIndex(function(v) { return key(v) === cK; });
       return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtP(v); }), correct: idx };
     }
 
@@ -218,8 +254,8 @@ window.CH12 = {
             choices: [
               "A. " + Math.round(irrRate * 100) + "%",
               "B. " + Math.round(discountRate * 100) + "%",
-              "C. " + Math.round((irrRate - 0.04) * 100) + "%",
-              "D. " + Math.round((irrRate + 0.04) * 100) + "%"
+              "C. " + Math.round((irrRate + 0.06) * 100) + "%",
+              "D. " + Math.round((irrRate - 0.06) * 100) + "%"
             ],
             correct: 0,
             exp: "IRR factor = " + fmt(investment) + " / " + fmt(annualCF) + " = " + fmtD(irrFactor) + ". Scanning the " + years + "-yr row of PV annuity tables, this factor corresponds to approximately " + Math.round(irrRate * 100) + "%. IRR > hurdle rate of " + Math.round(discountRate * 100) + "% — project is acceptable.",

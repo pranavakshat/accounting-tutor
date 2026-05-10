@@ -96,11 +96,23 @@ window.CH8 = {
     function mc(correct, wrongs, isDollar) {
       if (isDollar === undefined) isDollar = true;
       var f = isDollar ? fmt : function(n) { return n.toLocaleString(); };
-      var pool = [correct].concat(wrongs.filter(function(w) { return w !== correct && w > 0; })).slice(0, 4);
-      while (pool.length < 4) pool.push(Math.abs(correct) * 1.1 * pool.length);
+      var cR = Math.round(correct);
+      var pool = [cR];
+      wrongs.forEach(function(w) {
+        var r = Math.round(w);
+        if (r !== cR && r > 0 && pool.indexOf(r) === -1) pool.push(r);
+      });
+      var k = 1;
+      while (pool.length < 4) {
+        var fb = Math.round(Math.abs(cR) * (1 + 0.13 * k) + 137 * k);
+        if (cR < 0) fb = -fb;
+        if (pool.indexOf(fb) === -1 && fb !== 0) pool.push(fb);
+        k++;
+        if (k > 50) break;
+      }
       var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
       var letters = ['A', 'B', 'C', 'D'];
-      return { choices: s.map(function(v, i) { return letters[i] + '. ' + f(Math.round(v)); }), correct: s.indexOf(correct) };
+      return { choices: s.map(function(v, i) { return letters[i] + '. ' + f(Math.round(v)); }), correct: s.indexOf(cR) };
     }
 
     var collFromCurrent = Math.round(collPct / 100 * sales2);
@@ -114,37 +126,37 @@ window.CH8 = {
     var q3mc = mc(ar, [sales2, Math.round(ar * 0.5), collFromCurrent]);
     var q4s1 = (function() {
       var pool = [endFG, beginFG, endFGNext, units[1]].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
-      while (pool.length < 4) pool.push(endFG + pool.length * 100);
+      var k=1; while (pool.length < 4){var f=endFG + k * 137; if(pool.indexOf(f)===-1 && f>0) pool.push(f); k++;}
       var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
       return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtN(v) + ' units'; }), correct: s.indexOf(endFG) };
     })();
     var q4s2 = (function() {
       var pool = [beginFG, endFG, units[0], Math.round(units[0] * fgPct / 100)].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
-      while (pool.length < 4) pool.push(beginFG + pool.length * 100);
+      var k=1; while (pool.length < 4){var f=beginFG + k * 149; if(pool.indexOf(f)===-1 && f>0) pool.push(f); k++;}
       var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
       return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtN(v) + ' units'; }), correct: s.indexOf(beginFG) };
     })();
     var q4s3 = (function() {
       var pool = [production, units[1], production + endFG, production - beginFG].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
-      while (pool.length < 4) pool.push(production + pool.length * 100);
+      var k=1; while (pool.length < 4){var f=production + k * 163; if(pool.indexOf(f)===-1 && f>0) pool.push(f); k++;}
       var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
       return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtN(v) + ' units'; }), correct: s.indexOf(production) };
     })();
     var q5s1 = (function() {
       var pool = [rmNeeded, rmNeeded + 1000, rmNeeded - 1000, units[1] * lbsPerUnit].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
-      while (pool.length < 4) pool.push(rmNeeded + pool.length * 500);
+      var k=1; while (pool.length < 4){var f=rmNeeded + k * 547; if(pool.indexOf(f)===-1 && f>0) pool.push(f); k++;}
       var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
       return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtN(v) + ' lbs'; }), correct: s.indexOf(rmNeeded) };
     })();
     var q5s2 = (function() {
       var pool = [endRM, beginRM, Math.round(rmNeededNext * rmEndPct / 100) + 1000, endRM + 500].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
-      while (pool.length < 4) pool.push(endRM + pool.length * 200);
+      var k=1; while (pool.length < 4){var f=endRM + k * 211; if(pool.indexOf(f)===-1 && f>0) pool.push(f); k++;}
       var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
       return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtN(v) + ' lbs'; }), correct: s.indexOf(endRM) };
     })();
     var q5s3 = (function() {
       var pool = [rmPurchaseLbs, rmNeeded, rmPurchaseLbs + endRM, rmPurchaseLbs - beginRM].filter(function(v, i, arr) { return arr.indexOf(v) === i && v > 0; }).slice(0, 4);
-      while (pool.length < 4) pool.push(rmPurchaseLbs + pool.length * 500);
+      var k=1; while (pool.length < 4){var f=rmPurchaseLbs + k * 521; if(pool.indexOf(f)===-1 && f>0) pool.push(f); k++;}
       var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
       return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmtN(v) + ' lbs'; }), correct: s.indexOf(rmPurchaseLbs) };
     })();

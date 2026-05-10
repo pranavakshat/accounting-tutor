@@ -38,8 +38,17 @@ window.CH7 = {
     var fmt = function(n) { return '$' + n.toLocaleString(); };
 
     function mc(correct, wrongs) {
-      var pool = [correct].concat(wrongs.filter(function(w) { return w !== correct && w > 0; })).slice(0, 4);
-      while (pool.length < 4) pool.push(correct + pool.length);
+      var pool = [correct];
+      wrongs.forEach(function(w) {
+        if (w !== correct && w > 0 && pool.indexOf(w) === -1) pool.push(w);
+      });
+      var k = 1;
+      while (pool.length < 4) {
+        var f = Math.max(1, Math.round(correct * (1 + 0.13 * k)) + 7 * k);
+        if (pool.indexOf(f) === -1) pool.push(f);
+        k++;
+        if (k > 50) break;
+      }
       var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
       var letters = ['A', 'B', 'C', 'D'];
       return { choices: s.map(function(v, i) { return letters[i] + '. ' + fmt(v); }), correct: s.indexOf(correct) };

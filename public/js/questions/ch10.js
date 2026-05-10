@@ -32,19 +32,45 @@ window.CH10 = {
     var fmtP = function(n) { return (Math.round(n * 1000) / 10) + '%'; };
 
     function mcDollar(correct, wrongs) {
-      var pool = [correct].concat(wrongs.filter(function(w) { return w !== correct; })).slice(0, 4);
-      while (pool.length < 4) pool.push(Math.round(correct * (1 + 0.1 * pool.length)));
+      var cR = Math.round(correct);
+      var pool = [cR];
+      wrongs.forEach(function(w) {
+        var r = Math.round(w);
+        if (r !== cR && pool.indexOf(r) === -1) pool.push(r);
+      });
+      var k = 1;
+      while (pool.length < 4) {
+        var f = Math.round(cR * (1 + 0.13 * k) + 137 * k);
+        if (pool.indexOf(f) === -1) pool.push(f);
+        k++;
+        if (k > 50) break;
+      }
       var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
       var letters = ['A', 'B', 'C', 'D'];
-      return { choices: s.map(function(v, i) { return letters[i] + '. ' + fmt(v); }), correct: s.indexOf(correct) };
+      return { choices: s.map(function(v, i) { return letters[i] + '. ' + fmt(v); }), correct: s.indexOf(cR) };
     }
 
     function mcPct(correct, wrongs) {
-      var pool = [correct].concat(wrongs.filter(function(w) { return w !== correct; })).slice(0, 4);
-      while (pool.length < 4) pool.push(correct * (1 + 0.15 * pool.length));
+      // Compare on rounded-to-tenth-of-percent (same precision as fmtP)
+      var key = function(v) { return Math.round(v * 1000); };
+      var cK = key(correct);
+      var pool = [correct];
+      var seen = [cK];
+      wrongs.forEach(function(w) {
+        var k = key(w);
+        if (k !== cK && seen.indexOf(k) === -1) { pool.push(w); seen.push(k); }
+      });
+      var i = 1;
+      while (pool.length < 4) {
+        var f = correct * (1 + 0.17 * i) + 0.011 * i;
+        if (seen.indexOf(key(f)) === -1) { pool.push(f); seen.push(key(f)); }
+        i++;
+        if (i > 50) break;
+      }
       var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
       var letters = ['A', 'B', 'C', 'D'];
-      return { choices: s.map(function(v, i) { return letters[i] + '. ' + fmtP(v); }), correct: s.indexOf(correct) };
+      var idx = s.findIndex(function(v) { return key(v) === cK; });
+      return { choices: s.map(function(v, i) { return letters[i] + '. ' + fmtP(v); }), correct: idx };
     }
 
     // Dedicated turnover formatter: displays as "X.XXx" (ratio, not percentage)
@@ -55,30 +81,61 @@ window.CH10 = {
 
     // Q2: Asset Turnover — use fmtTurnover (not fmtP) to show ratio correctly
     var q2 = (function() {
-      var pool = [turnover, turnover * 1.2, turnover * 0.8, roi].filter(function(w) { return w !== turnover; });
-      pool = [turnover].concat(pool).slice(0, 4);
-      while (pool.length < 4) pool.push(turnover * (1 + 0.15 * pool.length));
+      // Compare values on the precision used for display (2 decimals)
+      var key = function(v) { return Math.round(v * 100); };
+      var tK = key(turnover);
+      var pool = [turnover];
+      var seen = [tK];
+      [turnover * 1.2, turnover * 0.8, roi].forEach(function(w) {
+        var k = key(w);
+        if (k !== tK && seen.indexOf(k) === -1) { pool.push(w); seen.push(k); }
+      });
+      var i = 1;
+      while (pool.length < 4) {
+        var f = turnover * (1 + 0.17 * i) + 0.07 * i;
+        if (seen.indexOf(key(f)) === -1) { pool.push(f); seen.push(key(f)); }
+        i++;
+        if (i > 50) break;
+      }
       var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
       var letters = ['A', 'B', 'C', 'D'];
-      return { choices: s.map(function(v, i) { return letters[i] + '. ' + fmtTurnover(v); }), correct: s.indexOf(turnover) };
+      var idx = s.findIndex(function(v) { return key(v) === tK; });
+      return { choices: s.map(function(v, i) { return letters[i] + '. ' + fmtTurnover(v); }), correct: idx };
     })();
 
     var q3mc = mcPct(roi, [roi * 1.15, roi * 0.85, minReturn]);
     var q4s1mc = mcDollar(Math.round(minReturn * assets), [Math.round(noi), Math.round(assets * roi), Math.round(assets * 0.1)]);
     var q4s2mc = mcDollar(Math.round(ri), [Math.round(noi), Math.round(ri * 1.2), Math.round(ri * 0.8)]);
     var q8 = (function() {
+      // Match fmtP precision (1 decimal place after Math.round(n*1000)/10)
+      var key = function(v) { return Math.round(v * 1000); };
       var na = Math.round(assets*0.80); var nr = noi/na;
-      var pool = [nr, roi, nr*0.8, roi*1.3].map(function(v){return Math.round(v*1000)/1000;}).filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
-      while(pool.length<4) pool.push(Math.round(nr*(1+pool.length*0.12)*1000)/1000);
+      var nrK = key(nr);
+      var pool = [nr];
+      var seen = [nrK];
+      [roi, nr*0.8, roi*1.3].forEach(function(w) {
+        var k = key(w);
+        if (k !== nrK && seen.indexOf(k) === -1 && w > 0) { pool.push(w); seen.push(k); }
+      });
+      var i=1;
+      while(pool.length<4){
+        var f = nr*(1 + 0.17*i) + 0.013*i;
+        if (seen.indexOf(key(f)) === -1) { pool.push(f); seen.push(key(f)); }
+        i++;
+        if (i > 50) break;
+      }
       var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-      return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmtP(v);}),correct:s.map(function(v){return Math.round(v*1000);}).indexOf(Math.round(nr*1000))};
+      return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmtP(v);}),correct:s.findIndex(function(v){return key(v)===nrK;})};
     })();
     var q10 = (function() {
       var pa=Math.round(assets*0.15); var pn=Math.round(pa*roi*0.85); var pr=pn-Math.round(minReturn*pa);
-      var pool=[pr, Math.round(pn), Math.round(minReturn*pa), pr-2000].filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,4);
-      while(pool.length<4) pool.push(pr+pool.length*1000);
+      var pool = [pr];
+      [Math.round(pn), Math.round(minReturn*pa), pr-2000].forEach(function(w){
+        if (w !== pr && pool.indexOf(w) === -1) pool.push(w);
+      });
+      var k=1; while(pool.length<4){var f=pr+k*1031; if(pool.indexOf(f)===-1) pool.push(f); k++;}
       var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
-      return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.map(Math.round).indexOf(Math.round(pr))};
+      return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.indexOf(pr)};
     })();
     var q12mc = mcDollar(noi, [Math.round(noi*1.2), Math.round(noi*0.8), Math.round(assets*minReturn)]);
     var q13mc = mcDollar(assets, [Math.round(assets*1.25), Math.round(assets*0.75), Math.round(sales*turnover)]);

@@ -57,17 +57,36 @@ window.CH9 = {
     var fav = function(n) { return n <= 0 ? 'Favorable (F)' : 'Unfavorable (U)'; };
 
     function mc(correct, wrongs) {
-      var absCorrect = Math.abs(correct);
-      var pool = [absCorrect].concat(wrongs.map(function(w) { return Math.abs(w); }).filter(function(w) { return w !== absCorrect; })).slice(0, 4);
-      while (pool.length < 4) pool.push(Math.round(absCorrect * 1.1 * pool.length + 50));
+      var absCorrect = Math.round(Math.abs(correct));
+      var pool = [absCorrect];
+      wrongs.forEach(function(w) {
+        var r = Math.round(Math.abs(w));
+        if (r !== absCorrect && r > 0 && pool.indexOf(r) === -1) pool.push(r);
+      });
+      var k = 1;
+      while (pool.length < 4) {
+        var fb = Math.round(absCorrect * (1 + 0.13 * k) + 53 * k + 11);
+        if (pool.indexOf(fb) === -1) pool.push(fb);
+        k++;
+        if (k > 50) break;
+      }
       var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
       var letters = ['A', 'B', 'C', 'D'];
       return { choices: s.map(function(v, i) { return letters[i] + '. ' + fmt(Math.round(v)); }), correct: s.indexOf(absCorrect) };
     }
 
     function mcUnits(correct, wrongs) {
-      var pool = [correct].concat(wrongs.filter(function(w) { return w !== correct && w > 0; })).slice(0, 4);
-      while (pool.length < 4) pool.push(correct + pool.length * 500);
+      var pool = [correct];
+      wrongs.forEach(function(w) {
+        if (w !== correct && w > 0 && pool.indexOf(w) === -1) pool.push(w);
+      });
+      var k = 1;
+      while (pool.length < 4) {
+        var f = correct + k * 547;
+        if (pool.indexOf(f) === -1 && f > 0) pool.push(f);
+        k++;
+        if (k > 50) break;
+      }
       var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
       var letters = ['A', 'B', 'C', 'D'];
       return { choices: s.map(function(v, i) { return letters[i] + '. ' + Math.round(v).toLocaleString(); }), correct: s.indexOf(correct) };
@@ -84,28 +103,28 @@ window.CH9 = {
       var actual = Math.round(actualPrice * actualQtyPurchased);
       var std = Math.round(stdPrice * actualQtyPurchased);
       var pool = [actual, std, Math.round(actualPrice*actualQtyUsed), Math.round(stdPrice*stdQtyAllowed)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
-      while(pool.length<4) pool.push(actual+pool.length*500);
+      var k=1; while(pool.length<4){var f=actual+k*523; if(pool.indexOf(f)===-1 && f>0) pool.push(f); k++;}
       var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
       return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.indexOf(actual)};
     })();
     var q10 = (function() {
       var std = Math.round(stdPrice * stdQtyAllowed);
       var pool = [std, Math.round(actualPrice*actualQtyUsed), Math.round(stdPrice*actualQtyUsed), Math.round(actualPrice*stdQtyAllowed)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
-      while(pool.length<4) pool.push(std+pool.length*500);
+      var k=1; while(pool.length<4){var f=std+k*541; if(pool.indexOf(f)===-1 && f>0) pool.push(f); k++;}
       var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
       return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.indexOf(std)};
     })();
     var q11 = (function() {
       var actual = Math.round(actualRate * actualHours);
       var pool = [actual, Math.round(stdRate*actualHours), Math.round(actualRate*stdHoursAllowed), Math.round(stdRate*stdHoursAllowed)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
-      while(pool.length<4) pool.push(actual+pool.length*500);
+      var k=1; while(pool.length<4){var f=actual+k*523; if(pool.indexOf(f)===-1 && f>0) pool.push(f); k++;}
       var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
       return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.indexOf(actual)};
     })();
     var q12 = (function() {
       var std = Math.round(stdRate * stdHoursAllowed);
       var pool = [std, Math.round(actualRate*actualHours), Math.round(stdRate*actualHours), Math.round(actualRate*stdHoursAllowed)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
-      while(pool.length<4) pool.push(std+pool.length*500);
+      var k=1; while(pool.length<4){var f=std+k*541; if(pool.indexOf(f)===-1 && f>0) pool.push(f); k++;}
       var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
       return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}),correct:s.indexOf(std)};
     })();
@@ -116,7 +135,7 @@ window.CH9 = {
       var absTotal = Math.abs(total);
       var fuLabel = total <= 0 ? '(F)' : '(U)';
       var pool = [absTotal, Math.abs(Math.round(mpv)), Math.abs(Math.round(mqv)), Math.abs(Math.round(mpv-mqv))].filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,4);
-      while(pool.length<4) pool.push(absTotal+pool.length*100);
+      var k=1; while(pool.length<4){var f=absTotal+k*113; if(pool.indexOf(f)===-1 && f>0) pool.push(f); k++;}
       var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
       var correctIdx = s.indexOf(absTotal);
       return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v)+(i===correctIdx?' '+fuLabel:'');}),correct:correctIdx};
@@ -128,7 +147,7 @@ window.CH9 = {
       var absTotal = Math.abs(total);
       var fuLabel = total <= 0 ? '(F)' : '(U)';
       var pool = [absTotal, Math.abs(Math.round(lrv)), Math.abs(Math.round(lev)), Math.abs(Math.round(lrv-lev))].filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,4);
-      while(pool.length<4) pool.push(absTotal+pool.length*100);
+      var k=1; while(pool.length<4){var f=absTotal+k*127; if(pool.indexOf(f)===-1 && f>0) pool.push(f); k++;}
       var s=pool.slice(0,4).sort(function(){return Math.random()-0.5;});
       var correctIdx = s.indexOf(absTotal);
       return {choices:s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v)+(i===correctIdx?' '+fuLabel:'');}),correct:correctIdx};

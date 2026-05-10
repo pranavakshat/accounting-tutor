@@ -25,11 +25,11 @@ window.CH11 = {
     // dmA = 5 lbs × $8/lb = $40; dmB = 3 lbs × $8/lb = $24
     var dmA = 40, dlA = 34, vmohA = 21, vselA = 26;
     var dmB = 24, dlB = 28, vmohB = 16, vselB = 19;
-    var varTotalA = dmA + dlA + vmohA + vselA;  // 121
-    var varTotalB = dmB + dlB + vmohB + vselB;  // 87
+    var varTotalA = dmA + dlA + vmohA + vselA;  // 40+34+21+26 = 121
+    var varTotalB = dmB + dlB + vmohB + vselB;  // 24+28+16+19 = 87
 
-    var cmA = priceA - varTotalA;  // 61
-    var cmB = priceB - varTotalB;  // 54
+    var cmA = priceA - varTotalA;  // 190-121 = 69
+    var cmB = priceB - varTotalB;  // 155-87  = 68
 
     // Fixed costs (parametric)
     var normalUnitsA = Math.round(122000 * m / 1000) * 1000;
@@ -92,8 +92,8 @@ window.CH11 = {
     // Q11-14: Constrained resource — RM
     var lbsPerA = 5, lbsPerB = 3;
     var rmCostPerLb = 8;
-    var cmPerLbA = cmA / lbsPerA;  // 61/5 = 12.20
-    var cmPerLbB = cmB / lbsPerB;  // 54/3 = 18.00
+    var cmPerLbA = cmA / lbsPerA;  // 69/5 = 13.80
+    var cmPerLbB = cmB / lbsPerB;  // 68/3 = 22.67
     // Beta has higher CM/lb, so produce Beta first
     var totalLbs = Math.round(228000 * m / 1000) * 1000;
 

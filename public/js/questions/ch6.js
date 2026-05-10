@@ -127,7 +127,7 @@ window.CH6 = {
     var q12 = (function() {
       var targetSales = Math.round((fixedCosts + targetProfit) / (cmRatioPct/100));
       var pool = [targetSales, Math.round(fixedCosts/(cmRatioPct/100)), Math.round(targetSales*1.2), Math.round(targetSales*0.8)].filter(function(v,i,a){return a.indexOf(v)===i&&v>0;}).slice(0,4);
-      while(pool.length<4) pool.push(targetSales + pool.length * 20000);
+      var k=1; while(pool.length<4){var f=targetSales+k*23000; if(pool.indexOf(f)===-1) pool.push(f); k++;}
       var s = pool.slice(0,4).sort(function(){return Math.random()-0.5;});
       return { choices: s.map(function(v,i){return ['A','B','C','D'][i]+'. '+fmt(v);}), correct: s.indexOf(targetSales) };
     })();

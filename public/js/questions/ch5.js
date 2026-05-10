@@ -72,16 +72,36 @@ window.CH5 = {
 
     function mc(correct, wrongs) {
       var cR = Math.round(correct);
-      var pool = [cR].concat(wrongs.map(Math.round).filter(function(w) { return w !== cR && w > 0; })).slice(0, 4);
-      while (pool.length < 4) pool.push(Math.round(cR * (1 + 0.12 * pool.length)));
+      var pool = [cR];
+      wrongs.forEach(function(w) {
+        var r = Math.round(w);
+        if (r !== cR && r > 0 && pool.indexOf(r) === -1) pool.push(r);
+      });
+      var k = 1;
+      while (pool.length < 4) {
+        var f = Math.round(Math.abs(cR) * (1 + 0.13 * k) + 31 * k);
+        if (cR < 0) f = -f;
+        if (pool.indexOf(f) === -1 && f !== 0) pool.push(f);
+        k++;
+        if (k > 50) break;
+      }
       var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
       var idx = s.indexOf(cR);
       return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + fmt(v); }), correct: idx };
     }
 
     function mcUnits(correct, wrongs) {
-      var pool = [correct].concat(wrongs.filter(function(w) { return w !== correct && w > 0; })).slice(0, 4);
-      while (pool.length < 4) pool.push(correct + pool.length * 500);
+      var pool = [correct];
+      wrongs.forEach(function(w) {
+        if (w !== correct && w > 0 && pool.indexOf(w) === -1) pool.push(w);
+      });
+      var k = 1;
+      while (pool.length < 4) {
+        var f = correct + k * 537;
+        if (f > 0 && pool.indexOf(f) === -1) pool.push(f);
+        k++;
+        if (k > 50) break;
+      }
       var s = pool.slice(0, 4).sort(function() { return Math.random() - 0.5; });
       var idx = s.indexOf(correct);
       return { choices: s.map(function(v, i) { return ['A','B','C','D'][i] + '. ' + v.toLocaleString() + ' units'; }), correct: idx };
