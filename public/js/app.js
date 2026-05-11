@@ -160,12 +160,41 @@ function updateChapterProgress() {
   $('ch-progress-bar').style.width = pct + '%';
 }
 
+function renderQuestionNav() {
+  var nav = $('ch-question-nav');
+  if (!nav || !currentQuestionSet) return;
+  var qs = currentQuestionSet.questions;
+  var data = Progress.getChapterData(currentChapterId);
+  var attempts = (data && data.attempts) || {};
+  nav.innerHTML = '';
+  qs.forEach(function(q, i) {
+    var btn = document.createElement('button');
+    btn.className = 'q-nav-btn';
+    btn.textContent = (i + 1);
+    btn.title = q.title;
+    if (attempts['q' + i] && attempts['q' + i].correct) btn.classList.add('q-nav-done');
+    if (i === currentQIdx) btn.classList.add('q-nav-current');
+    btn.addEventListener('click', function() { jumpToQuestion(i); });
+    nav.appendChild(btn);
+  });
+}
+
+function jumpToQuestion(idx) {
+  var qs = currentQuestionSet.questions;
+  if (idx < 0 || idx >= qs.length) return;
+  currentQIdx = idx;
+  currentStepIdx = 0;
+  renderCurrentQuestion();
+}
+
 function renderCurrentQuestion() {
   var qs = currentQuestionSet.questions;
   if (currentQIdx >= qs.length) {
     showChapterComplete();
     return;
   }
+
+  renderQuestionNav();
 
   var q = qs[currentQIdx];
   var area = $('ch-question-area');
@@ -661,7 +690,7 @@ function generateCertificate() {
     <span class="ch-badge">🏗️ Capital Budgeting</span>
     <span class="ch-badge">💵 Statement of Cash Flows</span>
   </div>
-  <p class="date">Completed on ${date} · 165 practice questions mastered</p>
+  <p class="date">Completed on ${date} · 170 practice questions mastered</p>
   <div class="footer">
     <div class="sig-line">Accounting Exam Prep</div>
     <div style="font-size:40px;">🏆</div>
