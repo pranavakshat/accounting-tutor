@@ -1,7 +1,7 @@
 window.Progress = {
   get KEY() { return window.AUTH ? window.AUTH.progressKey() : 'accounting_tutor_progress'; },
 
-  TOTALS: { ch1:15, ch2:15, ch5:15, ch6:15, ch7:15, ch8:15, ch9:15, ch10:15, ch11:15, ch12:15 },
+  TOTALS: { ch1:15, ch2:15, ch5:15, ch6:15, ch7:15, ch8:15, ch9:15, ch10:15, ch11:15, ch12:15, ch13:15 },
 
   normalize: function(data) {
     var self = this;
@@ -34,7 +34,8 @@ window.Progress = {
         ch9:  { completed: 0, total: 15, attempts: {} },
         ch10: { completed: 0, total: 15, attempts: {} },
         ch11: { completed: 0, total: 15, attempts: {} },
-        ch12: { completed: 0, total: 15, attempts: {} }
+        ch12: { completed: 0, total: 15, attempts: {} },
+        ch13: { completed: 0, total: 15, attempts: {} }
       },
       testHistory: []
     };

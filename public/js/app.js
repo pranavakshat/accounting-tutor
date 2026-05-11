@@ -12,7 +12,8 @@ var CHAPTERS = [
   { id: 'ch9',  module: 'CH9',  num: 9  },
   { id: 'ch10', module: 'CH10', num: 10 },
   { id: 'ch11', module: 'CH11', num: 11 },
-  { id: 'ch12', module: 'CH12', num: 12 }
+  { id: 'ch12', module: 'CH12', num: 12 },
+  { id: 'ch13', module: 'CH13', num: 13 }
 ];
 
 // ---- State ----
@@ -56,7 +57,8 @@ var CHAPTER_BADGES = {
   ch9:  '🔍',
   ch10: '💰',
   ch11: '🎯',
-  ch12: '🏗️'
+  ch12: '🏗️',
+  ch13: '💵'
 };
 
 // ---- Dashboard ----
@@ -644,7 +646,7 @@ function generateCertificate() {
   <h1>Certificate<br>of Completion</h1>
   <p class="sub">This certifies that</p>
   <div class="name">${name}</div>
-  <p class="completed">has successfully completed all 10 chapters of</p>
+  <p class="completed">has successfully completed all 11 chapters of</p>
   <p class="course">Managerial Accounting — Final Exam Preparation</p>
   <div class="chapters">
     <span class="ch-badge">🏷️ Cost Classification</span>
@@ -657,8 +659,9 @@ function generateCertificate() {
     <span class="ch-badge">💰 ROI &amp; Residual Income</span>
     <span class="ch-badge">🎯 Relevant Costs</span>
     <span class="ch-badge">🏗️ Capital Budgeting</span>
+    <span class="ch-badge">💵 Statement of Cash Flows</span>
   </div>
-  <p class="date">Completed on ${date} · 150 practice questions mastered</p>
+  <p class="date">Completed on ${date} · 165 practice questions mastered</p>
   <div class="footer">
     <div class="sig-line">Accounting Exam Prep</div>
     <div style="font-size:40px;">🏆</div>
